@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "es2016",          /* เวอร์ชั่น JavaScript ปลายทาง */
+    "module": "commonjs",        /* Node.js ใช้ CommonJS */
+    "rootDir": "./src",          /* โฟลเดอร์ที่เก็บโค้ด TypeScript */
+    "outDir": "./dist",          /* โฟลเดอร์ที่จะเก็บโค้ด JS ที่แปลงแล้ว */
+    "strict": true,              /* เปิดโหมดเข้มงวดเพื่อความปลอดภัย */
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  }
+}

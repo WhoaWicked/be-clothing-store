@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from '../services/auth.service';
+import { RegisterData } from "../types/auth.type";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -18,6 +19,25 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 access_token: accessToken,
             },
         });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
+export const register = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userData: RegisterData = req.body;
+        if (!userData.role_id || !userData.username || !userData.password || !userData.email || !userData.prefix_id || !userData.first_name || !userData.last_name || !userData.phone) {
+            return res.status(400).json({
+                success: false,
+                message: "กรุณากรอกข้อมูลให้ครบถ้วน",
+            });
+        }
+        const response = await authService.createUser(userData);
+        return res.status(200).json({
+            success: true,
+            message: 'ลงทะเบียนสำเร็จ',
+        })
     } catch (error: unknown) {
         next(error);
     }

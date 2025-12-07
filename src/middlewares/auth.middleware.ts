@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface UserPayload extends jwt.JwtPayload {
-    id?: number;
-    role?: string;
-    username?: string;
+    id: number;
+    role: string;
+    username: string;
 }
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
     user?: UserPayload
 }
 

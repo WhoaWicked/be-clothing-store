@@ -1,5 +1,5 @@
 import { query } from '../../config/db-middleware';
-import { InsertProductValues, UpdateProductValues } from '../../types/staff/product.type';
+import { InsertProductValues, ProductById, ProductList, UpdateProductValues } from '../../types/staff/product.type';
 
 export const countProducts = async () => {
     const queryStr: string = 'SELECT COUNT(*) AS total FROM products';
@@ -7,20 +7,20 @@ export const countProducts = async () => {
     return parseInt(response.rows[0].total, 10);
 }
 
-export const findProducts = async (page: number = 1, limit: number = 10) => {
+export const findProducts = async (page: number = 1, limit: number = 10): Promise<ProductList[]> => {
     const offset = (page - 1) * limit;
     const queryStr: string = 'SELECT id, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2';
     const response = await query(queryStr, [limit, offset]);
     return response.rows;
 }
 
-export const findProductByName = async (name: string) => {
+export const findProductByName = async (name: string): Promise<ProductById> => {
     const queryStr: string = 'SELECT id, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products WHERE name = $1';
     const response = await query(queryStr, [name]);
     return response.rows[0];
 }
 
-export const findProductById = async (id: number) => {
+export const findProductById = async (id: number): Promise<ProductById> => {
     const queryStr: string = 'SELECT id, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products WHERE id = $1';
     const response = await query(queryStr, [id]);
     return response.rows[0];

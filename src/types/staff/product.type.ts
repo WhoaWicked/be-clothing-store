@@ -1,3 +1,27 @@
+export interface ProductList {
+    id: number;
+    category_id: number;
+    name: string;
+    description: string;
+    base_price: number;
+    image_path: string;
+    is_active: boolean;
+    created_by: number;
+    created_at: string;
+}
+
+export interface ProductById {
+    id: number;
+    category_id: number;
+    name: string;
+    description: string;
+    base_price: number;
+    image_path: string;
+    is_active: boolean;
+    created_by: number;
+    created_at: string;
+}
+
 export interface CreateProductRequest {
     category_id: number;
     name: string;

@@ -26,9 +26,15 @@ export const findProductById = async (id: number): Promise<ProductById> => {
     return response.rows[0];
 }
 
+export const findProductByCode = async (product_code: string): Promise<ProductById> => {
+    const queryStr: string = 'SELECT id FROM products WHERE product_code = $1';
+    const response = await query(queryStr, [product_code]);
+    return response.rows[0];
+}
+
 export const insertProduct = async (values: InsertProductValues) => {
-    const queryStr: string = 'INSERT INTO products (category_id, name, description, base_price, image_path, created_by) VALUES ($1, $2, $3, $4, $5, $6);';
-    await query(queryStr, values);
+    const queryStr: string = 'INSERT INTO products (product_code, category_id, name, description, base_price, image_path, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7);';
+    await query(queryStr, [values.product_code, values.category_id, values.name, values.description, values.base_price, values.image_path, values.created_by]);
     return;
 }
 

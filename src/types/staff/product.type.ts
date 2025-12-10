@@ -1,5 +1,6 @@
 export interface ProductList {
     id: number;
+    product_code: string;
     category_id: number;
     name: string;
     description: string;
@@ -12,6 +13,7 @@ export interface ProductList {
 
 export interface ProductById {
     id: number;
+    product_code: string;
     category_id: number;
     name: string;
     description: string;
@@ -30,14 +32,24 @@ export interface CreateProductRequest {
     image_path?: string;
 }
 
-export type InsertProductValues = [
-    number,
-    string,
-    string,
-    number,
-    string,
-    number
-]
+// export type InsertProductValues = [
+//     number,
+//     string,
+//     string,
+//     number,
+//     string,
+//     number
+// ]
+
+export interface InsertProductValues {
+    product_code: string;
+    category_id: number;
+    name: string;
+    description: string;
+    base_price: number;
+    image_path: string;
+    created_by: number;
+}
 
 export interface UpdateProductRequest {
     category_id: number;

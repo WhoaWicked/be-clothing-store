@@ -9,6 +9,7 @@ export const errorMiddleware = (
 ) => {
     const status = error.status || 500;
     const message = error.message || 'เกิดข้อผิดพลาดภายในเซิฟเวอร์';
+    console.error(error);
     res.status(status).json({
         success: false,
         message

@@ -2,6 +2,7 @@ import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
 import * as productService from '../../services/staff/product.service';
 import { Request, Response, NextFunction } from 'express';
 import { CreateProductRequest, UpdateProductRequest } from '../../types/staff/product.type';
+import { deleteImageFromCloudinary } from '../../utils/upload.middleware';
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -51,6 +52,9 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response, ne
                 message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
             })
         }
+        if (req?.file?.path) {
+            requestData.image_path = req.file.path;
+        }
         await productService.createProduct(requestData, staffId);
         res.status(201).json({
             success: true,
@@ -78,6 +82,9 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response, ne
                 success: false,
                 message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
             })
+        }
+        if (req?.file?.path) {
+            requestData.image_path = req.file.path;
         }
         await productService.updateProduct(requestData, id, staffId);
         res.status(200).json({

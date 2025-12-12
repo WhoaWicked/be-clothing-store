@@ -39,7 +39,7 @@ export const getProductById = async (id: number) => {
 }
 
 export const createProduct = async (productData: CreateProductRequest, createdBy: number) => {
-    const [checkCategory, existingProduct] = await Promise.all([
+    const [checkCategory, existingName] = await Promise.all([
         productRepository.checkCategoryById(productData.category_id),
         productRepository.findProductByName(productData.name)
     ]);
@@ -52,7 +52,7 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
         throw createHttpError(404, 'หมวดหมู่สินค้าที่เลือกไม่มีในระบบ');
     }
 
-    if (existingProduct) {
+    if (existingName) {
         if (productData.image_path) {
             await deleteImageFromCloudinary(productData.image_path);
         }
@@ -87,27 +87,34 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
 }
 
 export const updateProduct = async (productData: UpdateProductRequest, id: number, updatedBy: number) => {
-    const [checkCategory, existingProduct] = await Promise.all([
+    const [checkCategory, existingName, existingProduct] = await Promise.all([
         productRepository.checkCategoryById(productData.category_id),
-        productRepository.findProductByName(productData.name)
+        productRepository.findProductByName(productData.name),
+        productRepository.findProductById(id)
     ]);
-    // ตรวจสอบหมวดหมู่สินค้า + ชื่อสินค้าว่ามีอยู่ในระบบหรือไม่
+   
+    // ตรวจสอบหมวดหมู่สินค้า + ชื่อสินค้าว่ามีอยู่ในระบบหรือไม่ + สินค้าที่จะแก้ไขมีอยู่จริงหรือไม่
     // ถ้าไม่มีให้ลบรูปที่อัพโหลดไปแล้วออกจาก Cloudinary
+    if (!existingProduct) {
+        if (productData.image_path) {
+            await deleteImageFromCloudinary(productData.image_path);
+        }
+        throw createHttpError(404, 'ไม่พบสินค้าที่ต้องการแก้ไข');
+    }
     if (!checkCategory) {
         if (productData.image_path) {
             await deleteImageFromCloudinary(productData.image_path);
         }
         throw createHttpError(404, 'หมวดหมู่สินค้าที่เลือกไม่มีในระบบ');
     }
-
-    if (existingProduct) {
+    if (existingName && existingName.id !== id) {
         if (productData.image_path) {
             await deleteImageFromCloudinary(productData.image_path);
         }
         throw createHttpError(409, 'ชื่อสินค้านี้มีในระบบแล้ว');
     }
-    const existingImage = await productRepository.findProductById(id);
-    let imageUrl: string = existingImage.image_path;
+
+    let imageUrl: string = existingProduct.image_path;
     // ถ้ามีการเปลี่ยนรูปใหม่
     if (productData.image_path && productData.image_path !== imageUrl) {
         // ลบรูปเก่าออกจาก Cloudinary
@@ -119,7 +126,7 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
     const values: UpdateProductValues = {
         category_id: productData.category_id,
         name: productData.name,
-        description: productData.description,
+        description: productData.description || '',
         base_price: productData.base_price,
         image_path: imageUrl || '',
         is_active: productData.is_active !== undefined ? productData.is_active : true,

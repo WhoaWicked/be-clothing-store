@@ -15,13 +15,13 @@ export const findProducts = async (page: number = 1, limit: number = 10): Promis
 }
 
 export const findProductByName = async (name: string): Promise<ProductById> => {
-    const queryStr: string = 'SELECT id, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products WHERE name = $1';
+    const queryStr: string = 'SELECT id, product_code, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products WHERE name = $1';
     const response = await query(queryStr, [name]);
     return response.rows[0];
 }
 
 export const findProductById = async (id: number): Promise<ProductById> => {
-    const queryStr: string = 'SELECT id, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products WHERE id = $1';
+    const queryStr: string = 'SELECT id, product_code, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products WHERE id = $1';
     const response = await query(queryStr, [id]);
     return response.rows[0];
 }

@@ -68,7 +68,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response, ne
 export const updateProduct = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const staffId = req.user!.id;
-        const id: number = Number(req.params.id);
+        const id: number = parseInt(req.params.id);
         const requestData: UpdateProductRequest = req.body;
         if (!id || isNaN(id) || id <= 0) {
             return res.status(400).json({

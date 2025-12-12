@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as productVariantService from '../../services/staff/productVariant.service';
 import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
+import { CreateVariantRequest, UpdateVariantRequest } from '../../types/staff/productVariant.type';
 
 export const getProductVariantById = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -39,7 +40,7 @@ export const getProductVariantsByProductId = async (req: Request, res: Response,
 export const createProductVariant = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const staffId: number = req.user!.id;
-        const requestData: any = req.body;
+        const requestData: CreateVariantRequest = req.body;
         if (!requestData.product_id || !requestData.size || !requestData.stock_quantity) {
             return res.status(400).json({ success: false, message: 'ข้อมูลที่ส่งมาไม่ครบถ้วน' });
         }
@@ -57,7 +58,7 @@ export const updateProductVariant = async (req: AuthenticatedRequest, res: Respo
     try {
         const staffId: number = req.user!.id;
         const id: number = parseInt(req.params.id);
-        const requestData: any = req.body;
+        const requestData: UpdateVariantRequest = req.body;
         if (isNaN(id) || id <= 0) {
             return res.status(400).json({ success: false, message: 'รหัสสินค้าตัวเลือกไม่ถูกต้อง' });
         }

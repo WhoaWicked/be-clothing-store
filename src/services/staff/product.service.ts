@@ -59,8 +59,8 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
         throw createHttpError(409, 'ชื่อสินค้านี้มีในระบบแล้ว');
     }
     let product_code: string;
-    let isUnique = false;
-    let attempt = 0;
+    let isUnique: boolean = false;
+    let attempt: number = 0;
     while (!isUnique && attempt < 10) {
         const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
         product_code = `PDT-${generatedCode}`;
@@ -92,7 +92,7 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
         productRepository.findProductByName(productData.name),
         productRepository.findProductById(id)
     ]);
-   
+
     // ตรวจสอบหมวดหมู่สินค้า + ชื่อสินค้าว่ามีอยู่ในระบบหรือไม่ + สินค้าที่จะแก้ไขมีอยู่จริงหรือไม่
     // ถ้าไม่มีให้ลบรูปที่อัพโหลดไปแล้วออกจาก Cloudinary
     if (!existingProduct) {

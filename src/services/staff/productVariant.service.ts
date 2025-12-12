@@ -1,6 +1,7 @@
 import * as productVariantRepository from '../../repositories/staff/productVariant.repository';
 import * as productRepository from '../../repositories/staff/product.repository';
 import { createHttpError } from '../../exceptions/http.exception';
+import { InsertVariantValues, UpdateVariantValues } from '../../types/staff/productVariant.type';
 
 export const getProductVariantById = async (id: number) => {
     const productVariant = await productVariantRepository.findProductVariantById(id);
@@ -28,7 +29,7 @@ export const createProductVariant = async (requestData: any, createdBy: number) 
         throw createHttpError(404, 'ไม่พบสินค้านี้');
     }
     let sku_code: string = `${existingProduct.product_code}-${requestData.size}`;
-    const values = {
+    const values: InsertVariantValues = {
         product_id: requestData.product_id,
         sku_code: sku_code,
         size: requestData.size,
@@ -44,7 +45,7 @@ export const updateProductVariant = async (id: number, requestData: any, updated
     if (!existingVariant) {
         throw createHttpError(404, 'ไม่พบสินค้าตัวเลือกนี้');
     }
-    const values = {
+    const values: UpdateVariantValues = {
         stock_quantity: requestData.stock_quantity,
         updatedBy: updatedBy
     };

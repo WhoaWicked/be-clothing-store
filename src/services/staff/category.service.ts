@@ -1,6 +1,7 @@
 import * as categoryRepository from '../../repositories/staff/category.repository';
 import { createHttpError } from '../../exceptions/http.exception';
 import { CategoryFilterParams, CreateCategoryRequest, InsertCategoryValues, UpdateCategoryRequest, UpdateCategoryValues } from '../../types/staff/category.type';
+import { generateCategoryCode } from '../../utils/category.utill';
 
 export const getCategories = async (filters: CategoryFilterParams) => {
     const { page, limit } = filters;
@@ -43,24 +44,10 @@ export const createCategory = async (categoryData: CreateCategoryRequest, create
     if (existingName) {
         throw createHttpError(409, 'ชื่อหมวดหมู่นี้มีในระบบแล้ว');
     }
-    let category_code: string;
-    let isUnique: boolean = false;
-    let attempt: number = 0;
-    while (!isUnique && attempt < 10) {
-        const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-        category_code = `CAT-${generatedCode}`;
-        const existingCode = await categoryRepository.findCategoryByCode(category_code);
-        if (!existingCode) {
-            isUnique = true;
-        }
-        attempt++;
-    }
-    if (!isUnique) {
-        throw createHttpError(500, 'ไม่สามารถสร้างรหัสสินค้าที่ไม่ซ้ำได้ กรุณาลองใหม่อีกครั้ง');
-    }
+    const category_code = await generateCategoryCode();
     const values: InsertCategoryValues = {
         category_name: categoryData.category_name,
-        category_code: category_code!,
+        category_code: category_code,
         created_by: createdBy
     }
     await categoryRepository.insertCategory(values);
@@ -68,11 +55,13 @@ export const createCategory = async (categoryData: CreateCategoryRequest, create
 }
 
 export const updateCategory = async (id: number, categoryData: UpdateCategoryRequest, updatedBy: number) => {
-    const existingCategory = await categoryRepository.findCategoryById(id);
+    const [existingCategory, existingName] = await Promise.all([
+        categoryRepository.findCategoryById(id),
+        categoryRepository.findCategoryByName(categoryData.category_name)
+    ]);
     if (!existingCategory) {
         throw createHttpError(404, 'ไม่พบหมวดหมู่สินค้าที่ต้องการ');
     }
-    const existingName = await categoryRepository.findCategoryByName(categoryData.category_name);
     if (existingName && existingName.id !== id) {
         throw createHttpError(409, 'ชื่อหมวดหมู่นี้มีในระบบแล้ว');
     }

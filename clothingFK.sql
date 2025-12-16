@@ -28,6 +28,7 @@ ALTER TABLE categories
 
 ALTER TABLE products
     ADD FOREIGN KEY (category_id) REFERENCES categories(id),
+    ADD FOREIGN KEY (gender_id) REFERENCES genders(id),
     ADD FOREIGN KEY (created_by) REFERENCES users(id),
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);
 
@@ -89,5 +90,9 @@ ALTER TABLE activity_logs
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);
 
 ALTER TABLE prefixes
+    ADD FOREIGN KEY (created_by) REFERENCES users(id),
+    ADD FOREIGN KEY (updated_by) REFERENCES users(id);
+
+ALTER TABLE genders
     ADD FOREIGN KEY (created_by) REFERENCES users(id),
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);

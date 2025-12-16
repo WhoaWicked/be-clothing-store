@@ -1,8 +1,8 @@
 -- 1.1 สร้าง Roles ก่อน (ยังไม่ต้องใส่ created_by เพราะยังไม่มี User)
-INSERT INTO roles (role_name) VALUES 
-('admin'), 
-('staff'), 
-('user');
+INSERT INTO roles (id, role_name) VALUES 
+(1, 'admin'), 
+(2, 'staff'), 
+(3, 'user');
 
 -- 1.2 สร้าง User คนแรก (Super Admin)
 -- หมายเหตุ: password_hash ในที่นี้เป็นแค่ตัวอย่าง ในใช้งานจริงต้องเป็น Bcrypt Hash
@@ -35,3 +35,10 @@ INSERT INTO prefixes (prefix_name, created_by) VALUES
 ('นาย', 1),
 ('นาง', 1),
 ('นางสาว', 1);
+
+-- ใส่ข้อมูลตั้งต้น
+INSERT INTO genders (gender_name, slug) VALUES 
+('Men', 'men'), 
+('Women', 'women'), 
+('Unisex', 'unisex'), 
+('Kids', 'kids');

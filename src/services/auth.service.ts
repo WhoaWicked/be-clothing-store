@@ -40,7 +40,7 @@ export const authenticateUser = async (email: string, password: string) => {
         username: user.username
     }
     const accessToken = jwt.sign(payload, String(process.env.JWT_SECRET), {
-        expiresIn: '2h',
+        expiresIn: '48h',
     });
     return accessToken;
 }

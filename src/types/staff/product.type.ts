@@ -2,7 +2,8 @@ export interface ProductList {
     id: number;
     product_code: string;
     category_id: number;
-    name: string;
+    category_name: string;
+    product_name: string;
     description: string;
     base_price: number;
     image_path: string;
@@ -68,4 +69,12 @@ export interface UpdateProductValues {
     image_path: string;
     is_active: boolean;
     updated_by: number;
+}
+
+export interface ProductFilterParams {
+    page: number;
+    limit: number;
+    product_code?: string;
+    product_name?: string;
+    category_name?: string;
 }

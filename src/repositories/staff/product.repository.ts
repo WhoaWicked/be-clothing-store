@@ -1,16 +1,75 @@
 import { query } from '../../config/db-middleware';
-import { InsertProductValues, ProductById, ProductList, UpdateProductValues } from '../../types/staff/product.type';
+import { InsertProductValues, ProductById, ProductFilterParams, ProductList, UpdateProductValues } from '../../types/staff/product.type';
 
-export const countProducts = async () => {
-    const queryStr: string = 'SELECT COUNT(*) AS total FROM products';
-    const response = await query(queryStr);
+export const countProducts = async (filters: ProductFilterParams) => {
+    const { product_code, product_name, category_name } = filters;
+    const conditions = [];
+    const params = [];
+    let paramCount = 0;
+    if (product_code) {
+        conditions.push(`p.product_code ILIKE $${++paramCount}`);
+        params.push(`%${product_code}%`)
+    }
+    if (product_name) {
+        conditions.push(`p.product_name ILIKE $${++paramCount}`);
+        params.push(`%${product_name}%`);
+    }
+    if (category_name) {
+        conditions.push(`c.category_name ILIKE $${++paramCount}`);
+        params.push(`%${category_name}%`);
+    }
+    let queryStr = `
+    SELECT COUNT(*) AS total FROM products p
+    JOIN categories c ON c.id = p.category_id
+    `;
+    if (conditions.length > 0) {
+        queryStr += `WHERE ${conditions.join(' AND ')}`;
+    }
+    const response = await query(queryStr, params);
     return parseInt(response.rows[0].total, 10);
 }
 
-export const findProducts = async (page: number = 1, limit: number = 10): Promise<ProductList[]> => {
+export const findProducts = async (filters: ProductFilterParams): Promise<ProductList[]> => {
+    const { page, limit, product_code, product_name, category_name } = filters;
     const offset = (page - 1) * limit;
-    const queryStr: string = 'SELECT id, category_id, name, description, base_price, image_path, is_active, created_by, created_at FROM products ORDER BY created_at DESC LIMIT $1 OFFSET $2';
-    const response = await query(queryStr, [limit, offset]);
+    const conditions = [];
+    const params = [];
+    let paramCount = 0;
+    if (product_code) {
+        conditions.push(`p.product_code ILIKE $${++paramCount}`);
+        params.push(`%${product_code}%`);
+    }
+    if (product_name) {
+        conditions.push(`p.product_name ILIKE $${++paramCount}`);
+        params.push(`%${product_name}%`);
+    }
+    if (category_name) {
+        conditions.push(`c.category_name ILIKE $${++paramCount}`);
+        params.push(`%${category_name}%`);
+    }
+    let queryStr = `
+    SELECT
+    p.id,
+    p.product_code,
+    p.product_name,
+    p.category_id,
+    c.category_name,
+    p.description,
+    p.base_price,
+    p.image_path,
+    p.is_active,
+    p.created_at,
+    p.created_by
+    FROM products p
+    JOIN categories c
+    ON c.id = p.category_id
+    `;
+    if (conditions.length > 0) {
+        queryStr += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    queryStr += ` ORDER BY p.created_at DESC LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+    params.push(limit, offset);
+    const response = await query(queryStr, params);
     return response.rows;
 }
 
@@ -44,7 +103,7 @@ export const updateProductById = async (values: UpdateProductValues, id: number)
     return;
 }
 
-export const deleeteProductById = async (id: number) => {
+export const deleteProductById = async (id: number) => {
     const queryStr: string = 'DELETE FROM products WHERE id = $1;';
     await query(queryStr, [id]);
     return;

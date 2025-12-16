@@ -5,9 +5,13 @@ import { CreateCategoryRequest, UpdateCategoryRequest } from '../../types/staff/
 
 export const getCategories = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const page: number = Number(req.query.page) || 1;
-        const limit: number = Number(req.query.limit) || 10;
-        const response = await categoryService.getCategories(page, limit);
+        const filters = {
+            page: Number(req.query.page) || 1,       // default = 1
+            limit: Number(req.query.limit) || 10,    // default = 10
+            category_name: req.query.category_name as string || undefined,
+            category_code: req.query.category_code as string || undefined,
+        }
+        const response = await categoryService.getCategories(filters);
         res.status(200).json({
             success: true,
             message: response.categories.length === 0
@@ -44,7 +48,7 @@ export const createCategory = async (req: AuthenticatedRequest, res: Response, n
     try {
         const staffId = req.user!.id;
         const categoryData: CreateCategoryRequest = req.body;
-        if (!categoryData.name || !categoryData.slug) {
+        if (!categoryData.category_name) {
             return res.status(400).json({
                 success: false,
                 message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
@@ -71,7 +75,7 @@ export const updateCategory = async (req: AuthenticatedRequest, res: Response, n
         }
         const staffId = req.user!.id;
         const categoryData: UpdateCategoryRequest = req.body;
-        if (!categoryData.name || !categoryData.slug) {
+        if (!categoryData.category_name) {
             return res.status(400).json({
                 success: false,
                 message: 'กรุณากรอกข้อมูลให้ครบถ้วน'

@@ -5,14 +5,19 @@ import { createHttpError } from '../../exceptions/http.exception';
 import { generateProductCode, handleImageCleanup } from '../../utils/product.utill';
 
 const checkCategoryAndProductName = async (productData: CreateProductRequest | UpdateProductRequest, id?: number) => {
-    const [categoryExists, productNameExists, productExists] = await Promise.all([
+    const [categoryExists, genderExists, productNameExists, productExists] = await Promise.all([
         productRepository.checkCategoryById(productData.category_id),
-        productRepository.findProductByName(productData.name),
+        productRepository.checkGenderById(productData.gender_id),
+        productRepository.findProductByName(productData.product_name),
         id ? productRepository.findProductById(id) : null
     ]);
     if (!categoryExists) {
         await handleImageCleanup(productData.image_path);
         throw createHttpError(404, 'หมวดหมู่สินค้าที่เลือกไม่มีในระบบ');
+    }
+    if (!genderExists) {
+        await handleImageCleanup(productData.image_path);
+        throw createHttpError(404, 'เพศสินค้าที่เลือกไม่มีในระบบ');
     }
     if (productNameExists && (!id || productNameExists.id !== id)) {
         await handleImageCleanup(productData.image_path);
@@ -33,23 +38,23 @@ export const getProducts = async (filters: ProductFilterParams) => {
     ]);
     if (products.length === 0) {
         return {
-            products: [],
             pagination: {
-                currentPage: 1,
-                totalPages: 0,
-                totalItems: 0,
-                itemsPerPage: limit,
-            }
+                currentPage: page,
+                totalPages: Math.ceil(totalItems / limit),
+                totalItems,
+                itemsPerPage: limit
+            },
+            products: []
         }
     }
     return {
-        products,
         pagination: {
             currentPage: page,
             totalPages: Math.ceil(totalItems / limit),
             totalItems,
             itemsPerPage: limit
-        }
+        },
+        products
     }
 }
 
@@ -67,7 +72,8 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
     const values: InsertProductValues = {
         product_code: product_code,
         category_id: productData.category_id,
-        name: productData.name,
+        gender_id: productData.gender_id,
+        product_name: productData.product_name,
         description: productData.description,
         base_price: productData.base_price,
         image_path: productData.image_path || '',
@@ -88,10 +94,12 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
     }
     const values: UpdateProductValues = {
         category_id: productData.category_id,
-        name: productData.name,
+        gender_id: productData.gender_id,
+        product_name: productData.product_name,
         description: productData.description,
         base_price: productData.base_price,
         image_path: imageUrl || '',
+        best_seller: productData.best_seller,
         is_active: productData.is_active !== undefined ? productData.is_active : true,
         updated_by: updatedBy,
     };

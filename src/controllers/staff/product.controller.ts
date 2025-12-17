@@ -10,14 +10,14 @@ import { createHttpError } from '../../exceptions/http.exception';
 
 // ฟังก์ชันตรวจสอบข้อมูลสินค้าก่อนสร้าง/แก้ไข
 const validateProductData = (data: CreateProductRequest | UpdateProductRequest) => {
-    if (!data.category_id || !data.name || !data.description || !data.base_price) {
+    if (!data.category_id || !data.gender_id || !data.product_name || !data.base_price) {
         throw createHttpError(400, 'กรุณากรอกข้อมูลให้ครบถ้วน');
     }
     if (data.base_price < 0) {
         throw createHttpError(400, 'ราคาสินค้าต้องมากกว่าศูนย์บาท');
     }
 
-    if (data.name.length > 100) {
+    if (data.product_name.length > 100) {
         throw createHttpError(400, 'ชื่อต้องไม่เกิน 100 ตัวอักษร');
     }
 }
@@ -38,6 +38,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
             product_code: req.query.product_code as string || undefined,
             product_name: req.query.product_name as string || undefined,
             category_name: req.query.category_name as string || undefined,
+            gender_name: req.query.gender_name as string || undefined
         }
         // เรียก service เพื่อดึงข้อมูลสินค้า
         const response = await productService.getProducts(filters);

@@ -3,7 +3,7 @@ import * as productController from '../../controllers/staff/product.controller';
 import { protect, staff } from "../../middlewares/auth.middleware";
 import { upload } from "../../middlewares/upload.middleware";
 const router = Router();
-const BASE_URL = '/staff/products';
+const BASE_URL = '/staff/product';
 
 router.get(`${BASE_URL}/list`, protect, staff, productController.getProducts);
 router.get(`${BASE_URL}/list/:id`, protect, staff, productController.getProductById);

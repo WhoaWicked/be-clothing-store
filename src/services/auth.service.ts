@@ -32,6 +32,7 @@ export const updateLastLogin = async (id: number) => {
 
 export const authenticateUser = async (email: string, password: string) => {
     const user: UserFields = await getUserByEmail(email);
+    if (!user) { throw createHttpError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'); }
     await verifyPassword(password, user.password);
     await updateLastLogin(user.id);
     const payload: UserPayload = {

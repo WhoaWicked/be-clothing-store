@@ -38,7 +38,6 @@ INSERT INTO prefixes (prefix_name, created_by) VALUES
 
 -- ใส่ข้อมูลตั้งต้น
 INSERT INTO genders (gender_name, slug) VALUES 
-('Men', 'men'), 
-('Women', 'women'), 
-('Unisex', 'unisex'), 
-('Kids', 'kids');
+('ผู้ชาย', 'men'), 
+('ผู้หญิง', 'women'), 
+('เด็ก', 'kids');

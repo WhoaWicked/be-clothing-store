@@ -7,6 +7,7 @@ import staffProductRouter from './routes/staff/product.route';
 import staffProductVariantRouter from './routes/staff/productVariant.route';
 import staffCategoryRouter from './routes/staff/category.route';
 import userProductRouter from './routes/user/product.route';
+import userFilterRouter from './routes/user/filter.route';
 import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app: Express = express();
@@ -21,6 +22,7 @@ app.use(staffProductRouter);
 app.use(staffProductVariantRouter);
 app.use(staffCategoryRouter);
 app.use(userProductRouter);
+app.use(userFilterRouter);
 app.use(errorMiddleware);
 
 export default app;

@@ -4,7 +4,7 @@ import { query } from "../config/db-middleware";
 const router = Router();
 const BASE_URL = '/health-check';
 
-router.get('/health-check', async (req: Request, res: Response) => {
+router.get(BASE_URL, async (req: Request, res: Response) => {
     try {
         const result = await query("SELECT CURRENT_TIMESTAMP AS current_time");
         const rows = result?.rows ?? [];

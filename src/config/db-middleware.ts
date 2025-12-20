@@ -1,29 +1,30 @@
 import { Pool, PoolClient } from 'pg';
 
 // Create PostgreSQL connection pool
-// const pool = new Pool({
-//     host: process.env.DB_HOST,
-//     port: Number(process.env.DB_PORT),
-//     database: process.env.DB_NAME,
-//     user: process.env.DB_USER,
-//     password: String(process.env.DB_PASSWORD || ''),
-//     max: 20, // Maximum number of clients in pool
-//     idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-//     connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
-// });
-
 const pool = new Pool({
-    // 1. ส่วนระบุที่อยู่ (ใช้ String บรรทัดเดียวจบ)
-    connectionString: process.env.DATABASE_URL,
-
-    // 2. ส่วนความปลอดภัย (บังคับสำหรับ Supabase)
-    ssl: { rejectUnauthorized: false },
-
-    // 3. ส่วนพฤติกรรม (ควรใส่กลับมา)
-    max: 20,                        // สำคัญ: กันไม่ให้แอปเราเปิด Connection ถล่ม Database
-    idleTimeoutMillis: 30000,       // ประหยัด: ถ้าไม่มีใครใช้ 30 วิ ให้ตัดทิ้ง จะได้ไม่เปลือง
-    connectionTimeoutMillis: 2000,  // กันค้าง: ถ้าเน็ตหลุด หรือต่อไม่ได้เกิน 2 วิ ให้ Error เลย (ดีกว่าค้างยาว)
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: String(process.env.DB_PASSWORD || ''),
+    max: 20, // Maximum number of clients in pool
+    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+    connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
 });
+
+// Supabase connection (uncomment to use)
+// const pool = new Pool({
+//     // 1. ส่วนระบุที่อยู่ (ใช้ String บรรทัดเดียวจบ)
+//     connectionString: process.env.DATABASE_URL,
+    
+//     // 2. ส่วนความปลอดภัย (บังคับสำหรับ Supabase)
+//     ssl: { rejectUnauthorized: false },
+
+//     // 3. ส่วนพฤติกรรม (ควรใส่กลับมา)
+//     max: 20,                        // สำคัญ: กันไม่ให้แอปเราเปิด Connection ถล่ม Database
+//     idleTimeoutMillis: 30000,       // ประหยัด: ถ้าไม่มีใครใช้ 30 วิ ให้ตัดทิ้ง จะได้ไม่เปลือง
+//     connectionTimeoutMillis: 2000,  // กันค้าง: ถ้าเน็ตหลุด หรือต่อไม่ได้เกิน 2 วิ ให้ Error เลย (ดีกว่าค้างยาว)
+// });
 
 // Test database connection
 pool.on('connect', (client: PoolClient) => {

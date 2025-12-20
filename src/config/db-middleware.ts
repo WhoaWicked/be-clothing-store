@@ -2,16 +2,30 @@ import { Pool, PoolClient } from 'pg';
 import { Request, Response, NextFunction } from 'express';
 
 // Create PostgreSQL connection pool
+// const pool = new Pool({
+//     host: process.env.DB_HOST,
+//     port: Number(process.env.DB_PORT),
+//     database: process.env.DB_NAME,
+//     user: process.env.DB_USER,
+//     password: String(process.env.DB_PASSWORD || ''),
+//     max: 20, // Maximum number of clients in pool
+//     idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+//     connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
+// });
+
+// Supabase PostgreSQL connection pool
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: String(process.env.DB_PASSWORD || ''),
+    host: process.env.DB_HOST_SUPABASE,
+    port: Number(process.env.DB_PORT_SUPABASE),
+    database: process.env.DB_NAME_SUPABASE,
+    user: process.env.DB_USER_SUPABASE,
+    password: String(process.env.DB_PASSWORD_SUPABASE || ''),
     max: 20, // Maximum number of clients in pool
     idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
     connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
 });
+
+
 
 // Test database connection
 pool.on('connect', (client: PoolClient) => {

@@ -1,5 +1,4 @@
 import { Pool, PoolClient } from 'pg';
-import { Request, Response, NextFunction } from 'express';
 
 // Create PostgreSQL connection pool
 // const pool = new Pool({
@@ -13,19 +12,18 @@ import { Request, Response, NextFunction } from 'express';
 //     connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
 // });
 
-// Supabase PostgreSQL connection pool
 const pool = new Pool({
-    host: process.env.DB_HOST_SUPABASE,
-    port: Number(process.env.DB_PORT_SUPABASE),
-    database: process.env.DB_NAME_SUPABASE,
-    user: process.env.DB_USER_SUPABASE,
-    password: String(process.env.DB_PASSWORD_SUPABASE || ''),
-    max: 20, // Maximum number of clients in pool
-    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-    connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
+    // 1. ส่วนระบุที่อยู่ (ใช้ String บรรทัดเดียวจบ)
+    connectionString: process.env.DATABASE_URL,
+    
+    // 2. ส่วนความปลอดภัย (บังคับสำหรับ Supabase)
+    ssl: { rejectUnauthorized: false },
+
+    // 3. ส่วนพฤติกรรม (ควรใส่กลับมา)
+    max: 20,                        // สำคัญ: กันไม่ให้แอปเราเปิด Connection ถล่ม Database
+    idleTimeoutMillis: 30000,       // ประหยัด: ถ้าไม่มีใครใช้ 30 วิ ให้ตัดทิ้ง จะได้ไม่เปลือง
+    connectionTimeoutMillis: 2000,  // กันค้าง: ถ้าเน็ตหลุด หรือต่อไม่ได้เกิน 2 วิ ให้ Error เลย (ดีกว่าค้างยาว)
 });
-
-
 
 // Test database connection
 pool.on('connect', (client: PoolClient) => {

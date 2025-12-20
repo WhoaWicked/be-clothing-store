@@ -61,6 +61,7 @@ export const findProducts = async (filters: ProductOverviewFilters) => {
     c.category_name,
     g.gender_name,
     p.base_price,
+    p.description,
     p.image_path,
     COALESCE(SUM(v.stock_quantity), 0) as total_stock,
     p.created_at

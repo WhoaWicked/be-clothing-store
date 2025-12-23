@@ -58,6 +58,7 @@ export const findProducts = async (filters: ProductOverviewFilters) => {
     SELECT
     p.id,
     p.product_name,
+    p.product_code,
     c.category_name,
     g.gender_name,
     p.base_price,
@@ -76,6 +77,7 @@ export const findProducts = async (filters: ProductOverviewFilters) => {
     GROUP BY
     p.id,
     p.product_name,
+    p.product_code,
     c.category_name,
     g.gender_name,
     p.base_price,
@@ -85,5 +87,25 @@ export const findProducts = async (filters: ProductOverviewFilters) => {
     `;
     params.push(limit, offset);
     const response = await query(queryStr, params);
+    return response.rows;
+}
+
+export const findProductById = async (productId: number) => {
+    const queryStr = 'SELECT * FROM products WHERE id = $1 AND is_active = $2';
+    const params = [productId, true];
+    const response = await query(queryStr, params);
+    return response.rows[0];
+}
+
+export const findProductByCode = async (productCode: string) => {
+    const queryStr = 'SELECT * FROM products WHERE product_code = $1 AND is_active = $2';
+    const params = [productCode, true];
+    const response = await query(queryStr, params);
+    return response.rows[0];
+}
+
+export const findProductVariantByProductId = async (productId: number) => {
+    const queryStr = 'SELECT * FROM product_variants WHERE product_id = $1 ORDER BY created_at ASC;';
+    const response = await query(queryStr, [productId]);
     return response.rows;
 }

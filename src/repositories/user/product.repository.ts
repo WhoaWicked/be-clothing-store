@@ -105,7 +105,7 @@ export const findProductByCode = async (productCode: string) => {
 }
 
 export const findProductVariantByProductId = async (productId: number) => {
-    const queryStr = 'SELECT * FROM product_variants WHERE product_id = $1 ORDER BY created_at ASC;';
+    const queryStr = 'SELECT id, product_id, size, sku_code, stock_quantity, created_at FROM product_variants WHERE product_id = $1 ORDER BY created_at ASC;';
     const response = await query(queryStr, [productId]);
     return response.rows;
 }

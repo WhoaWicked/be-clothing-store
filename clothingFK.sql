@@ -96,3 +96,7 @@ ALTER TABLE prefixes
 ALTER TABLE genders
     ADD FOREIGN KEY (created_by) REFERENCES users(id),
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);
+
+-- บอก DB ว่า: ใน 1 ตะกร้า (cart_id) ห้ามมีสินค้าเดิม (variant_id) ซ้ำกันคนละบรรทัด
+ALTER TABLE cart_items 
+ADD CONSTRAINT unique_cart_item UNIQUE (cart_id, variant_id);

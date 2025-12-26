@@ -9,9 +9,14 @@ import staffCategoryRouter from './routes/staff/category.route';
 import userProductRouter from './routes/user/product.route';
 import userFilterRouter from './routes/user/filter.route';
 import userCartRouter from './routes/user/cart.route';
+import userOrderRouter from './routes/user/order.route';
+import { webhookHandler } from './controllers/user/order.controller';
 import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app: Express = express();
+
+app.post('/webhook', express.raw({ type: 'application/json' }), webhookHandler);
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,6 +35,7 @@ app.use(staffCategoryRouter);
 app.use(userProductRouter);
 app.use(userFilterRouter);
 app.use(userCartRouter);
+app.use(userOrderRouter);
 app.use(errorMiddleware);
 
 export default app;

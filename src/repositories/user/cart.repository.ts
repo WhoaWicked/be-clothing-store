@@ -56,7 +56,9 @@ export const findMyCartItemsByUserId = async (userId: number) => {
     SELECT
     ci.id AS item_id,
     ci.quantity,
+    p.id AS product_id,
     p.product_name,
+    p.product_code,
     p.image_path,
     p.base_price,
     pv.size,

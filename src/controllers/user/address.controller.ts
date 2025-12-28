@@ -37,11 +37,11 @@ export const getAddressById = async (req: AuthenticatedRequest, res: Response, n
 export const createAddress = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const userId = req.user!.id;
-        const { street, sub_district, district, province, zip_code } = req.body;
-        if (!street || !sub_district || !district || !province || !zip_code) {
+        const { street, sub_district, district, province, zip_code, first_name, last_name, phone } = req.body;
+        if (!street || !sub_district || !district || !province || !zip_code || !first_name || !last_name || !phone) {
             return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน' });
         }
-        const values = { street, sub_district, district, province, zip_code };
+        const values = { street, sub_district, district, province, zip_code, first_name, last_name, phone };
         const newAddress = await addressService.createAddress(userId, values);
         res.status(201).json({
             success: true,
@@ -57,14 +57,14 @@ export const updateAddress = async (req: AuthenticatedRequest, res: Response, ne
     try {
         const userId = req.user!.id;
         const addressId = Number(req.params.addressId);
-        const { street, sub_district, district, province, zip_code } = req.body;
+        const { street, sub_district, district, province, zip_code, first_name, last_name, phone } = req.body;
         if (!addressId || addressId <= 0) {
             return res.status(400).json({ success: false, message: 'กรุณาระบุที่อยู่ที่ต้องการอัพเดต' });
         }
-        if (!street || !sub_district || !district || !province || !zip_code) {
+        if (!street || !sub_district || !district || !province || !zip_code || !first_name || !last_name || !phone) {
             return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน' });
         }
-        const values = { street, sub_district, district, province, zip_code };
+        const values = { street, sub_district, district, province, zip_code, first_name, last_name, phone };
         const updatedAddress = await addressService.updateAddress(addressId, userId, values);
         res.status(200).json({
             success: true,

@@ -153,6 +153,9 @@ CREATE TABLE orders (
     shipping_address  JSONB,
     order_code        VARCHAR(255) NOT NULL UNIQUE,
     tracking_number   VARCHAR(255), -- ไม่ต้องใส่ NOT NULL
+    cancelled_reason  TEXT,       -- เก็บเหตุผล (Null ได้ ถ้ายังไม่ยกเลิก)
+    cancelled_at      TIMESTAMP,  -- เก็บเวลาที่กดยกเลิก
+    cancelled_by      INTEGER,    -- เก็บ user_id ของคนที่กด (เผื่อ Admin กดให้)
     created_by        INTEGER,
     updated_by        INTEGER,
     created_at        TIMESTAMP DEFAULT now(),

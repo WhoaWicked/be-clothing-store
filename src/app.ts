@@ -10,6 +10,7 @@ import userProductRouter from './routes/user/product.route';
 import userFilterRouter from './routes/user/filter.route';
 import userCartRouter from './routes/user/cart.route';
 import userOrderRouter from './routes/user/order.route';
+import userAddressRouter from './routes/user/address.route';
 import { webhookHandler } from './controllers/user/order.controller';
 import { errorMiddleware } from "./middlewares/error.middleware";
 
@@ -36,6 +37,7 @@ app.use(userProductRouter);
 app.use(userFilterRouter);
 app.use(userCartRouter);
 app.use(userOrderRouter);
+app.use(userAddressRouter);
 app.use(errorMiddleware);
 
 export default app;

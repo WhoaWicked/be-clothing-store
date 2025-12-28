@@ -39,3 +39,46 @@ export const webhookHandler = async (req: Request, res: Response, next: NextFunc
         next(error);
     }
 }
+
+export const getOrderList = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.id;
+        if (!userId) {
+            return res.status(400).json({ message: 'ไม่พบข้อมูลผู้ใช้' });
+        }
+        const order_status_id = Number(req.query.order_status_id) || null;
+        const response = await orderService.getOrderList(userId, order_status_id);
+        res.status(200).json({
+            success: true,
+            message: 'ดึงข้อมูลคำสั่งซื้อสำเร็จ',
+            data:
+            {
+                totalOrders: response.length,
+                orders: response,
+            }
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
+export const cancelOrder = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.id;
+        const orderId = Number(req.params.orderId);
+        if (!orderId || isNaN(orderId) || orderId <= 0) {
+            return res.status(400).json({ message: 'รหัสคำสั่งซื้อไม่ถูกต้อง' });
+        }
+        const { cancelledReason } = req.body;
+        if (!cancelledReason) {
+            return res.status(400).json({ message: 'กรุณาระบุเหตุผลในการยกเลิกคำสั่งซื้อ' });
+        }
+        await orderService.cancelUserOrder(orderId, userId, cancelledReason);
+        res.status(200).json({
+            success: true,
+            message: 'ยกเลิกคำสั่งซื้อสำเร็จ',
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}

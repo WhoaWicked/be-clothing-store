@@ -124,3 +124,20 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
         client.release();
     }
 }
+
+export const getOrderList = async (userId: number, orderStatusId: number | null) => {
+    const orders = await orderRepository.findOrderListByUserId(userId, orderStatusId);
+    return orders;
+}
+
+export const cancelUserOrder = async (orderId: number, userId: number, cancelledReason: string) => {
+    const existingOrder = await orderRepository.findOrderById(orderId, userId);
+    if (!existingOrder) {
+        throw createHttpError(404, 'ไม่พบคำสั่งซื้อที่ต้องการยกเลิก');
+    }
+    if (existingOrder.order_status_id === 5) {
+        throw createHttpError(400, 'คำสั่งซื้อนี้ถูกยกเลิกไปแล้ว');
+    }
+    await orderRepository.cancelOrder(orderId, userId, cancelledReason);
+    return;
+}

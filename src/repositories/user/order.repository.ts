@@ -92,12 +92,12 @@ export const updateOrderStatusToPaid = async (client: PoolClient, orderId: numbe
     return;
 }
 
-export const findOrderById = async (orderId: number, userId: number) => {
+export const findOrderById = async (client: PoolClient, orderId: number, userId: number) => {
     const queryStr = `
     SELECT * FROM orders
     WHERE id = $1 AND user_id = $2
     `;
-    const response = await query(queryStr, [orderId, userId]);
+    const response = await client.query(queryStr, [orderId, userId]);
     return response.rows[0];
 }
 
@@ -162,5 +162,25 @@ export const findOrderListByUserId = async (userId: number, orderStatusId: numbe
     ORDER BY o.created_at DESC
         `;
     const response = await query(queryStr, params);
+    return response.rows;
+}
+
+export const findOrderItemsByOrderId = async (client: PoolClient, orderId: number) => {
+    const queryStr = `
+    SELECT
+    oi.id AS order_id,
+    pv.id AS variant_id,
+    p.product_name,
+    p.image_path,
+    pv.size,
+    oi.quantity,
+    oi.unit_price,
+    (oi.quantity * oi.unit_price) AS subtotal
+    FROM order_items oi
+    JOIN product_variants pv ON oi.variant_id = pv.id
+    JOIN products p ON pv.product_id = p.id
+    WHERE oi.order_id = $1;
+    `;
+    const response = await client.query(queryStr, [orderId]);
     return response.rows;
 }

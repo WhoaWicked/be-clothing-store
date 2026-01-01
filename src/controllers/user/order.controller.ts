@@ -40,6 +40,24 @@ export const webhookHandler = async (req: Request, res: Response, next: NextFunc
     }
 }
 
+export const repayOrder = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.id;
+        const orderId = Number(req.params.orderId);
+        if (!orderId || isNaN(orderId) || orderId <= 0) {
+            return res.status(400).json({ message: 'รหัสคำสั่งซื้อไม่ถูกต้อง' });
+        }
+        const response = await orderService.repayOrder(orderId, userId);
+        res.status(200).json({
+            success: true,
+            message: 'สร้างลิงก์ชำระเงินใหม่สำเร็จ',
+            data: response
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
 export const getOrderList = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const userId = req.user!.id;

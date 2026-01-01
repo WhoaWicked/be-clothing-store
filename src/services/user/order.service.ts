@@ -84,6 +84,52 @@ export const placeOrder = async (userId: number, shippingAddress: string) => {
     }
 }
 
+export const repayOrder = async (orderId: number, userId: number) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const existingOrder = await orderRepository.findOrderById(client, orderId, userId);
+        if (!existingOrder) {
+            throw createHttpError(404, 'ไม่พบคำสั่งซื้อที่ต้องการชำระเงินใหม่');
+        }
+        if (existingOrder.payment_status_id === 2) {
+            throw createHttpError(400, 'คำสั่งซื้อนี้ชำระเงินแล้ว');
+        }
+        const order_code = existingOrder.order_code;
+        const orderItems = await orderRepository.findOrderItemsByOrderId(client, orderId);
+        const lineItems = orderItems.map((item: any) => ({
+            price_data: {
+                currency: 'thb',
+                product_data: {
+                    name: item.product_name
+                    // images: [item.image_path],
+                },
+                unit_amount: Math.round(Number(item.unit_price) * 100), // Stripe ใช้หน่วยสตางค์
+            },
+            quantity: item.quantity,
+        }));
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: lineItems,
+            mode: 'payment',
+            success_url: `${process.env.FRONTEND_URL}/user/order/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.FRONTEND_URL}/user/order/cancel`,
+            metadata: {
+                orderId: orderId,
+                orderCode: order_code
+            }
+        });
+        await orderRepository.updateOrderStripeSessionId(client, session.id, orderId);
+        await client.query('COMMIT');
+        return { checkoutUrl: session.url };
+    } catch (error: unknown) {
+        throw createHttpError(500, 'เกิดข้อผิดพลาดในการชำระเงินคำสั่งซื้อ: ' + (error as Error).message);
+    }
+    finally {
+        client.release();
+    }
+}
+
 export const webhookProcess = async (rawBody: Buffer, signature: string, endpointSecret: string) => {
     let event: Stripe.Event;
     try {
@@ -131,7 +177,8 @@ export const getOrderList = async (userId: number, orderStatusId: number | null)
 }
 
 export const cancelUserOrder = async (orderId: number, userId: number, cancelledReason: string) => {
-    const existingOrder = await orderRepository.findOrderById(orderId, userId);
+    const client = await pool.connect();
+    const existingOrder = await orderRepository.findOrderById(client, orderId, userId);
     if (!existingOrder) {
         throw createHttpError(404, 'ไม่พบคำสั่งซื้อที่ต้องการยกเลิก');
     }

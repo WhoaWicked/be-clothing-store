@@ -11,6 +11,8 @@ import userFilterRouter from './routes/user/filter.route';
 import userCartRouter from './routes/user/cart.route';
 import userOrderRouter from './routes/user/order.route';
 import userAddressRouter from './routes/user/address.route';
+import userReviewRouter from './routes/user/review.route';
+import userProfileRouter from './routes/user/profile.route';
 import { webhookHandler } from './controllers/user/order.controller';
 import { errorMiddleware } from "./middlewares/error.middleware";
 
@@ -38,6 +40,8 @@ app.use(userFilterRouter);
 app.use(userCartRouter);
 app.use(userOrderRouter);
 app.use(userAddressRouter);
+app.use(userReviewRouter);
+app.use(userProfileRouter);
 app.use(errorMiddleware);
 
 export default app;

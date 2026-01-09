@@ -108,7 +108,8 @@ CREATE TABLE products (
     updated_by     INTEGER,
     
     created_at     TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMP NOT NULL DEFAULT now()
+    updated_at     TIMESTAMP NOT NULL DEFAULT now(),
+    deleted_at     TIMESTAMP,
 );
 
 CREATE TABLE product_variants (
@@ -117,6 +118,7 @@ CREATE TABLE product_variants (
     sku_code       VARCHAR(255) UNIQUE NOT NULL,
     size           VARCHAR(255),
     stock_quantity INTEGER,
+    deleted_at     TIMESTAMP,
     created_by     INTEGER,
     updated_by     INTEGER,
     created_at     TIMESTAMP DEFAULT now(),

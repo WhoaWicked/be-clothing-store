@@ -3,11 +3,9 @@ import { ProductOverviewFilters } from '../../types/user/product.type';
 
 export const countProducts = async (filters: ProductOverviewFilters) => {
     const { product_name, gender_name, category_name } = filters;
-    const conditions = [];
-    const params = [];
-    let paramCount = 0;
-    conditions.push(`p.is_active = $${++paramCount}`);
-    params.push(true);
+    const conditions = ['p.is_active = $1'];
+    const params: any[] = [true];
+    let paramCount = 1;
     if (product_name) {
         conditions.push(`p.product_name ILIKE $${++paramCount}`);
         params.push(`%${product_name}%`);
@@ -36,11 +34,9 @@ export const countProducts = async (filters: ProductOverviewFilters) => {
 export const findProducts = async (filters: ProductOverviewFilters) => {
     const { page, limit, product_name, gender_name, category_name } = filters;
     const offset = (page - 1) * limit;
-    const conditions = [];
-    const params = [];
-    let paramCount = 0;
-    conditions.push(`p.is_active = $${++paramCount}`);
-    params.push(true);
+    const conditions = ['p.is_active = $1'];
+    const params: any[] = [true];
+    let paramCount = 1;
     if (product_name) {
         conditions.push(`p.product_name ILIKE $${++paramCount}`);
         params.push(`%${product_name}%`);

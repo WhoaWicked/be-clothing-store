@@ -33,7 +33,7 @@ ALTER TABLE products
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);
 
 ALTER TABLE product_variants
-    ADD FOREIGN KEY (product_id) REFERENCES products(id),
+    ADD FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     ADD FOREIGN KEY (created_by) REFERENCES users(id),
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);
 

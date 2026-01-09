@@ -37,6 +37,10 @@ export interface CreateProductRequest {
     description: string;
     base_price: number;
     image_path?: string;
+    variants: {
+        size: string;
+        stock_quantity: number;
+    }[];
 }
 
 // export type InsertProductValues = [
@@ -67,7 +71,12 @@ export interface UpdateProductRequest {
     base_price: number;
     image_path?: string;
     best_seller?: boolean;
-    is_active: boolean;
+    is_active?: boolean;
+    variants: {
+        id?: number;
+        size: string;
+        stock_quantity: number;
+    }[];
 }
 
 export interface UpdateProductValues {

@@ -104,6 +104,10 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
         const newProductId = insertProduct.id;
         // เพิ่มตัวเลือกขนาดสินค้า
         for (const variant of productData.variants) {
+            const allowedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+            if (!allowedSizes.includes(variant.size)) {
+                throw createHttpError(400, `ขนาด ${variant.size} ไม่ถูกต้อง กรุณาระบุให้ถูกต้อง`);
+            }
             const existingSize = await productVariantRepository.findProductVariantByProductIdAndSize(newProductId, variant.size);
             if (existingSize) {
                 throw createHttpError(409, `ขนาด ${variant.size} มีในระบบแล้วสำหรับสินค้านี้`);

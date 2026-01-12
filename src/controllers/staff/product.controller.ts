@@ -9,7 +9,7 @@ import { CreateProductRequest, ProductFilterParams, UpdateProductRequest } from 
 import { createHttpError } from '../../exceptions/http.exception';
 
 // ฟังก์ชันตรวจสอบข้อมูลสินค้าก่อนสร้าง/แก้ไข
-const validateProductData = (data: CreateProductRequest | UpdateProductRequest) => {
+const validateProductData = (data: CreateProductRequest) => {
     if (!data.category_id || !data.gender_id || !data.product_name || !data.base_price) {
         throw createHttpError(400, 'กรุณากรอกข้อมูลให้ครบถ้วน');
     }
@@ -19,6 +19,9 @@ const validateProductData = (data: CreateProductRequest | UpdateProductRequest) 
 
     if (data.product_name.length > 100) {
         throw createHttpError(400, 'ชื่อต้องไม่เกิน 100 ตัวอักษร');
+    }
+    if (!data.variants) {
+        throw createHttpError(400, 'กรุณาเพิ่มตัวเลือกขนาดสินค้าอย่างน้อย 1 ขนาด');
     }
 }
 
@@ -73,17 +76,37 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 }
 
 // สร้างสินค้าใหม่ (เฉพาะ staff)
+// export const createProduct = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+//     try {
+//         // ดึง id ของ staff จาก token
+//         const staffId = req.user!.id;
+//         // รับข้อมูลสินค้าจาก body
+//         const requestData: CreateProductRequest = req.body;
+//         // ตรวจสอบความถูกต้องของข้อมูล
+//         validateProductData(requestData);
+//         // ถ้ามีไฟล์ภาพแนบมา ให้เพิ่ม path ลงในข้อมูล
+//         if (req?.file?.path) { requestData.image_path = req.file.path; }
+//         // เรียก service เพื่อสร้างสินค้า
+//         await productService.createProduct(requestData, staffId);
+//         res.status(201).json({
+//             success: true,
+//             message: 'สร้างสินค้าสำเร็จ'
+//         });
+//     } catch (error: unknown) {
+//         next(error);
+//     }
+// }
 export const createProduct = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        // ดึง id ของ staff จาก token
         const staffId = req.user!.id;
-        // รับข้อมูลสินค้าจาก body
         const requestData: CreateProductRequest = req.body;
-        // ตรวจสอบความถูกต้องของข้อมูล
         validateProductData(requestData);
-        // ถ้ามีไฟล์ภาพแนบมา ให้เพิ่ม path ลงในข้อมูล
+        if (typeof requestData.variants === 'string') {
+            requestData.variants = JSON.parse(requestData.variants);
+        } else {
+            throw createHttpError(400, 'รูปแบบข้อมูล variants ไม่ถูกต้อง');
+        }
         if (req?.file?.path) { requestData.image_path = req.file.path; }
-        // เรียก service เพื่อสร้างสินค้า
         await productService.createProduct(requestData, staffId);
         res.status(201).json({
             success: true,
@@ -106,6 +129,11 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response, ne
         // ตรวจสอบ id และข้อมูล
         validateProductId(id);
         validateProductData(requestData);
+        if (typeof requestData.variants === 'string') {
+            requestData.variants = JSON.parse(requestData.variants);
+        } else {
+            throw createHttpError(400, 'รูปแบบข้อมูล variants ไม่ถูกต้อง');
+        }
         // ถ้ามีไฟล์ภาพแนบมา ให้เพิ่ม path ลงในข้อมูล
         if (req?.file?.path) { requestData.image_path = req.file.path; }
         // เรียก service เพื่ออัปเดตสินค้า
@@ -126,10 +154,10 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response, ne
         const id: number = Number(req.params.id);
         validateProductId(id);
         // เรียก service เพื่อลบสินค้า
-        await productService.deleteProduct(id);
+        const response = await productService.deleteProduct(id);
         res.status(200).json({
             success: true,
-            message: 'ลบสินค้าสำเร็จ'
+            message: response
         });
     } catch (error: unknown) {
         next(error);

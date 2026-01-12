@@ -29,3 +29,23 @@ export const getProducts = async (filters: ProductOverviewFilters) => {
         products
     }
 }
+
+export const getProductByCode = async (productCode: string) => {
+    const product = await productRepository.findProductByCode(productCode);
+    if (!product) {
+        throw createHttpError(404, 'ไม่พบสินค้าที่คุณต้องการ');
+    }
+    return product;
+}
+
+export const getProductVariantByProductId = async (productId: number) => {
+    const product = await productRepository.findProductById(productId);
+    if (!product) {
+        throw createHttpError(404, 'ไม่พบสินค้าที่คุณต้องการ');
+    }
+    const variants = await productRepository.findProductVariantByProductId(productId);
+    if (!variants || variants.length === 0) {
+        throw createHttpError(404, 'ไม่พบตัวเลือกสินค้าที่คุณต้องการ');
+    }
+    return variants;
+}

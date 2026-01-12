@@ -2,6 +2,7 @@ import * as productVariantRepository from '../../repositories/staff/productVaria
 import * as productRepository from '../../repositories/staff/product.repository';
 import { createHttpError } from '../../exceptions/http.exception';
 import { InsertVariantValues, UpdateVariantValues } from '../../types/staff/productVariant.type';
+import { pool } from '../../config/db-middleware';
 
 export const getProductVariantById = async (id: number) => {
     const productVariant = await productVariantRepository.findProductVariantById(id);
@@ -21,6 +22,7 @@ export const getProductVariantsByProductId = async (productId: number) => {
 
 export const createProductVariant = async (requestData: any, createdBy: number) => {
     const existingVariant = await productVariantRepository.findProductVariantByProductIdAndSize(requestData.product_id, requestData.size);
+    const client = await pool.connect();
     if (existingVariant) {
         throw createHttpError(400, 'สินค้าตัวเลือกนี้มีอยู่แล้วสำหรับขนาดที่ระบุ');
     }
@@ -36,7 +38,7 @@ export const createProductVariant = async (requestData: any, createdBy: number) 
         stock_quantity: requestData.stock_quantity,
         created_by: createdBy
     };
-    await productVariantRepository.insertProductVariant(values);
+    await productVariantRepository.insertProductVariant(client, values);
     return;
 }
 
@@ -49,7 +51,7 @@ export const updateProductVariant = async (id: number, requestData: any, updated
         stock_quantity: requestData.stock_quantity,
         updatedBy: updatedBy
     };
-    await productVariantRepository.updateProductVariantById(values, id);
+    // await productVariantRepository.updateProductVariantById(values, id);
     return;
 }
 

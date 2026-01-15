@@ -109,7 +109,7 @@ CREATE TABLE products (
     
     created_at     TIMESTAMP NOT NULL DEFAULT now(),
     updated_at     TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at     TIMESTAMP,
+    deleted_at     TIMESTAMP
 );
 
 CREATE TABLE product_variants (

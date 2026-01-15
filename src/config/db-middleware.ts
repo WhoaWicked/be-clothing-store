@@ -1,24 +1,24 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
 
 // 1. สร้าง Config object แยกออกมา (เผื่อแก้สะดวก)
-// const dbConfig = {
-//     host: process.env.DB_HOST,
-//     port: Number(process.env.DB_PORT),
-//     database: process.env.DB_NAME,
-//     user: process.env.DB_USER,
-//     password: String(process.env.DB_PASSWORD || ''),
-//     max: 20,
-//     idleTimeoutMillis: 30000,
-//     connectionTimeoutMillis: 2000,
-// };
-
 const dbConfig = {
-    connectionString: process.env.DATABASE_URL,
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: String(process.env.DB_PASSWORD || ''),
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
-    ssl: { rejectUnauthorized: false }, // สำหรับ Supabase ที่ใช้ SSL
 };
+
+// const dbConfig = {
+//     connectionString: process.env.DATABASE_URL,
+//     max: 20,
+//     idleTimeoutMillis: 30000,
+//     connectionTimeoutMillis: 2000,
+//     ssl: { rejectUnauthorized: false }, // สำหรับ Supabase ที่ใช้ SSL
+// };
 
 // 2. ✅ ต้อง export pool เพื่อให้ Service เรียกไปใช้งาน (pool.connect) ได้
 export const pool = new Pool(dbConfig);

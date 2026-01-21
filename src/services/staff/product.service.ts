@@ -104,7 +104,7 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
         const newProductId = insertProduct.id;
         // เพิ่มตัวเลือกขนาดสินค้า
         for (const variant of productData.variants) {
-            const allowedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+            const allowedSizes = ['XS', 'S', 'M', 'L', 'XL', '2XL'];
             if (!allowedSizes.includes(variant.size)) {
                 throw createHttpError(400, `ขนาด ${variant.size} ไม่ถูกต้อง กรุณาระบุให้ถูกต้อง`);
             }
@@ -135,6 +135,7 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
     const imagePathExists = await checkCategoryAndProductName(productData, id);
     const client = await pool.connect();
     try {
+        await client.query('BEGIN');
         let imageUrl: string = imagePathExists || '';
         // ถ้ามีการเปลี่ยนรูปใหม่
         if (productData.image_path && productData.image_path !== imageUrl) {
@@ -194,6 +195,24 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการแก้ไขสินค้า: ' + (error as Error).message);
     } finally {
         client.release();
+    }
+}
+
+export const updateProductStatus = async (id: number, is_active: boolean, updatedBy: number) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const existingProduct = await productRepository.findProductById(id);
+        if (!existingProduct) {
+            throw createHttpError(404, 'ไม่พบสินค้าที่ต้องการแก้ไขสถานะ');
+        }
+        await productRepository.updateProductStatusById(client, is_active, id, updatedBy);
+        await client.query('COMMIT');
+        return;
+    } catch (error: unknown) {
+        await client.query('ROLLBACK');
+        throw createHttpError(500, 'เกิดข้อผิดพลาดในการแก้ไขสินค้า: ' + (error as Error).message);
+
     }
 }
 

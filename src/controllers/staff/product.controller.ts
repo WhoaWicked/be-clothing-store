@@ -147,6 +147,22 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response, ne
     }
 }
 
+export const updateProductStatus = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const staffId = req.user!.id;
+        const id: number = parseInt(req.params.id);
+        const { is_active } = req.body;
+        validateProductId(id);
+        await productService.updateProductStatus(id, is_active, staffId);
+        res.status(200).json({
+            success: true,
+            message: 'แก้ไขสถานะสินค้าสำเร็จ'
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
 // ลบสินค้า (เฉพาะ staff)
 export const deleteProduct = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {

@@ -128,7 +128,59 @@ export const findProductByName = async (product_name: string): Promise<ProductBy
 }
 
 export const findProductById = async (id: number): Promise<ProductById> => {
-    const queryStr: string = 'SELECT id, product_code, category_id, gender_id, product_name, description, base_price, image_path, best_seller, is_active, created_by, created_at FROM products WHERE id = $1';
+    const queryStr: string = `
+    SELECT
+    p.id AS product_id,
+    p.product_code,
+    p.category_id,
+    c.category_name,
+    p.gender_id,
+    g.gender_name,
+    p.product_name,
+    p.description,
+    p.base_price,
+    p.image_path,
+    p.best_seller,
+    p.is_active,
+    p.created_by,
+    CONCAT(first_name, ' ', last_name) AS creator_name,
+    p.created_at,
+    COALESCE ( SUM ( pv.stock_quantity ), 0 ) AS sum_stock_quantity,
+    COALESCE (
+        json_agg (
+            json_build_object (
+                'id', pv.id,
+                'sku_code', pv.sku_code,
+                'size', pv.size,
+                'stock_quantity', pv.stock_quantity
+            ) ORDER BY pv.id
+        ) FILTER (WHERE pv.id IS NOT NULL),
+        '[]'
+    ) AS variants
+    FROM products p
+    LEFT JOIN product_variants pv ON p.id = pv.product_id AND pv.deleted_at IS NULL
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN genders g ON p.gender_id = g.id
+    LEFT JOIN users u ON p.created_by = u.id
+	WHERE p.id = $1 AND p.deleted_at IS NULL
+	GROUP BY
+    p.id,
+    p.product_code,
+    p.category_id,
+    c.category_name,
+    p.gender_id,
+    g.gender_name,
+    p.product_name,
+    p.description,
+    p.base_price,
+    p.image_path,
+    p.best_seller,
+    p.is_active,
+    p.created_by,
+    u.first_name,
+    u.last_name,
+    p.created_at
+    `;
     const response = await query(queryStr, [id]);
     return response.rows[0];
 }
@@ -148,6 +200,12 @@ export const insertProduct = async (client: PoolClient, values: InsertProductVal
 export const updateProductById = async (client: PoolClient, values: UpdateProductValues, id: number) => {
     const queryStr: string = 'UPDATE products SET category_id = $1, gender_id = $2, product_name = $3, description = $4, base_price = $5, image_path = $6, best_seller = $7, is_active = $8, updated_by = $9, updated_at = NOW() WHERE id = $10;';
     await client.query(queryStr, [values.category_id, values.gender_id, values.product_name, values.description, values.base_price, values.image_path, values.best_seller, values.is_active, values.updated_by, id]);
+    return;
+}
+
+export const updateProductStatusById = async (client: PoolClient, is_active: boolean, id: number, updated_by: number) => {
+    const queryStr: string = 'UPDATE products SET is_active = $1, updated_by = $2, updated_at = NOW() WHERE id = $3;';
+    await client.query(queryStr, [is_active, updated_by, id]);
     return;
 }
 

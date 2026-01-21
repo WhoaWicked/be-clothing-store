@@ -67,6 +67,7 @@ export const updateCategory = async (id: number, categoryData: UpdateCategoryReq
     }
     const values: UpdateCategoryValues = {
         category_name: categoryData.category_name,
+        is_active: categoryData.is_active,
         updated_by: updatedBy
     }
     await categoryRepository.updateCategoryById(values, id);

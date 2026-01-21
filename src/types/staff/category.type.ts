@@ -7,6 +7,7 @@ export interface InsertCategoryValues {
 export interface UpdateCategoryValues {
     category_name: string;
     updated_by: number;
+    is_active?: boolean;
 }
 
 export interface CreateCategoryRequest {
@@ -15,6 +16,7 @@ export interface CreateCategoryRequest {
 
 export interface UpdateCategoryRequest {
     category_name: string;
+    is_active?: boolean;
 }
 
 export interface CategoryFilterParams {

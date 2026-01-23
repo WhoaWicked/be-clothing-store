@@ -7,7 +7,7 @@ export const findGenders = async () => {
 }
 
 export const findCategories = async () => {
-    const queryStr = 'SELECT id, category_name FROM categories ORDER BY created_at DESC';
+    const queryStr = 'SELECT id, category_name FROM categories WHERE is_active = true ORDER BY created_at DESC';
     const response = await query(queryStr);
     return response.rows;
 }

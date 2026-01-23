@@ -64,8 +64,8 @@ export const getOrderList = async (req: AuthenticatedRequest, res: Response, nex
         if (!userId) {
             return res.status(400).json({ message: 'ไม่พบข้อมูลผู้ใช้' });
         }
-        const order_status_id = Number(req.query.order_status_id) || null;
-        const response = await orderService.getOrderList(userId, order_status_id);
+        const order_status_name = String(req.query.order_status_name) || null;
+        const response = await orderService.getOrderList(userId, order_status_name);
         res.status(200).json({
             success: true,
             message: 'ดึงข้อมูลคำสั่งซื้อสำเร็จ',

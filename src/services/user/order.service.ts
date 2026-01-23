@@ -171,8 +171,8 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
     }
 }
 
-export const getOrderList = async (userId: number, orderStatusId: number | null) => {
-    const orders = await orderRepository.findOrderListByUserId(userId, orderStatusId);
+export const getOrderList = async (userId: number, orderStatusName: string | null) => {
+    const orders = await orderRepository.findOrderListByUserId(userId, orderStatusName);
     return orders;
 }
 

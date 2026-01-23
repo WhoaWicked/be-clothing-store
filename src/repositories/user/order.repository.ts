@@ -114,8 +114,8 @@ export const cancelOrder = async (orderId: number, userId: number, cancelledReas
     return;
 }
 
-export const findOrderListByUserId = async (userId: number, orderStatusId: number | null) => {
-    const params = [userId];
+export const findOrderListByUserId = async (userId: number, orderStatusName: string | null) => {
+    const params: any = [userId];
     let queryStr = `
     SELECT
     o.id,
@@ -149,12 +149,12 @@ export const findOrderListByUserId = async (userId: number, orderStatusId: numbe
     LEFT JOIN product_variants pv ON oi.variant_id = pv.id
     LEFT JOIN products p ON pv.product_id = p.id
     WHERE o.user_id = $1`;
-    if (orderStatusId) {
-        if (orderStatusId === 5) {
-            queryStr += ` AND o.order_status_id IN(5, 6)`;
+    if (orderStatusName) {
+        if (orderStatusName === 'cancelled') {
+            queryStr += ` AND os.status_name IN('cancelled', 'refunded')`;
         } else {
-            queryStr += ` AND o.order_status_id = $2`;
-            params.push(orderStatusId);
+            queryStr += ` AND os.status_name = $2`;
+            params.push(orderStatusName);
         }
     }
     queryStr += `

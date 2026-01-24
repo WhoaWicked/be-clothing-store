@@ -16,7 +16,7 @@ export const countOrdersByStatus = async (filters: any) => {
             o.order_code      ILIKE $${paramCount} OR
             u.first_name      ILIKE $${paramCount} OR
             u.last_name       ILIKE $${paramCount} OR
-            u.phone           ILIKE $${paramCount} OR
+            o.shipping_address->>'phone' ILIKE $${paramCount} OR
             o.tracking_number ILIKE $${paramCount}
             )`);
         params.push(`%${search_global}%`);
@@ -52,7 +52,7 @@ export const findOrderListByStatus = async (filters: any) => {
             o.order_code      ILIKE $${paramCount} OR
             u.first_name      ILIKE $${paramCount} OR
             u.last_name       ILIKE $${paramCount} OR
-            u.phone           ILIKE $${paramCount} OR
+            o.shipping_address->>'phone' ILIKE $${paramCount} OR
             o.tracking_number ILIKE $${paramCount}
             )`);
         params.push(`%${search_global}%`);
@@ -67,6 +67,7 @@ export const findOrderListByStatus = async (filters: any) => {
     o.shipping_address,
     o.tracking_number,
     CONCAT (u.first_name, ' ', u.last_name) AS customer_name,
+    u.phone AS customer_phone,
     o.cancelled_reason,
     CONCAT (cu.first_name, ' ', cu.last_name) AS cancelled_by_name,
     o.cancelled_at,
@@ -78,6 +79,8 @@ export const findOrderListByStatus = async (filters: any) => {
         json_build_object(
             'variant_id', pv.id,
             'name', p.product_name,
+            'product_code', p.product_code,
+            'sku_code', pv.sku_code,
             'image_path', p.image_path,
             'size', pv.size,
             'quantity', oi.quantity,

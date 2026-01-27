@@ -2,7 +2,7 @@ import { query } from '../../config/db-middleware';
 import { PoolClient } from "pg";
 
 export const countOrdersByStatus = async (filters: any) => {
-    const { status_name, search_global } = filters;
+    const { status_name, search_global, start_date, end_date } = filters;
     const conditions = [];
     const params: any[] = [];
     let paramCount = 0;
@@ -21,6 +21,10 @@ export const countOrdersByStatus = async (filters: any) => {
             )`);
         params.push(`%${search_global}%`);
     }
+    if (start_date && end_date) {
+        conditions.push(`o.created_at BETWEEN $${++paramCount} AND $${++paramCount}`);
+        params.push(start_date, end_date);
+    }
     let queryStr = `
     SELECT
     COUNT(*) AS total
@@ -37,7 +41,7 @@ export const countOrdersByStatus = async (filters: any) => {
 }
 
 export const findOrderListByStatus = async (filters: any) => {
-    const { page, limit, status_name, search_global } = filters;
+    const { page, limit, status_name, search_global, start_date, end_date, sort_type } = filters;
     const offset = (page - 1) * limit;
     const conditions = [];
     const params: any[] = [];
@@ -56,6 +60,25 @@ export const findOrderListByStatus = async (filters: any) => {
             o.tracking_number ILIKE $${paramCount}
             )`);
         params.push(`%${search_global}%`);
+    }
+    if (start_date && end_date) {
+        conditions.push(`o.created_at BETWEEN $${++paramCount} AND $${++paramCount}`);
+        params.push(start_date, end_date);
+    }
+    let sortClause = 'o.created_at DESC';
+    switch (sort_type) {
+        case 'oldest':
+            sortClause = 'o.created_at ASC';
+            break;
+        case 'price_high':
+            sortClause = 'o.total_amount DESC';
+            break;
+        case 'price_low':
+            sortClause = 'o.total_amount ASC';
+            break;
+        case 'newest':
+        default:
+            sortClause = 'o.created_at DESC';
     }
     let queryStr = `
     SELECT
@@ -102,7 +125,7 @@ export const findOrderListByStatus = async (filters: any) => {
     }
     queryStr += `
     GROUP BY o.id, os.status_name, ps.status_name, u.id, cu.id
-    ORDER BY o.created_at DESC LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+    ORDER BY ${sortClause} LIMIT $${++paramCount} OFFSET $${++paramCount}`;
     params.push(limit, offset);
     const { rows } = await query(queryStr, params);
     return rows;

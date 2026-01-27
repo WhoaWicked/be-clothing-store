@@ -41,12 +41,15 @@ export const cancelledOrder = async (orderId: number, cancelledReason: string, s
     return;
 }
 
-export const shippedOrder = async (orderId: number, updatedBy: number) => {
+export const shippedOrder = async (orderId: number, trackingNumber: string, updatedBy: number) => {
     const existingOrder = await orderRepository.findOrderById(orderId);
     if (!existingOrder) {
         throw createHttpError(404, 'ไม่พบคำสั่งซื้อที่ต้องการจัดส่ง');
     }
-    const trackingNumber = await generateTrackingNumber();
+    const existingTracking = await orderRepository.findOrderByTrackingNumber(trackingNumber);
+    if (existingTracking) {
+        throw createHttpError(400, 'หมายเลขพัสดุนี้ถูกใช้งานแล้ว กรุณาใช้หมายเลขพัสดุอื่น');
+    }
     await orderRepository.updateShippedStatus(orderId, trackingNumber, updatedBy);
     return;
 }

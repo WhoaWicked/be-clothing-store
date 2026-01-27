@@ -8,8 +8,12 @@ export const getOrderList = async (req: Request, res: Response, next: NextFuncti
             page: Number(req.query.page) || 1,
             limit: Number(req.query.limit) || 10,
             status_name: req.query.status_name as string || undefined,
-            search_global: req.query.search_global as string || undefined
+            search_global: req.query.search_global as string || undefined,
+            start_date: req.query.start_date as string || undefined,
+            end_date: req.query.end_date as string || undefined,
+            sort_type: req.query.sort_type as string || ''
         }
+
         const response = await orderService.getOrderList(filters);
         res.status(200).json({
             success: true,
@@ -48,7 +52,14 @@ export const shippedOrder = async (req: AuthenticatedRequest, res: Response, nex
     try {
         const staffId = req.user!.id;
         const orderId = Number(req.params.orderId);
-        await orderService.shippedOrder(orderId, staffId);
+        const { tracking_number } = req.body;
+        if (!tracking_number) {
+            return res.status(400).json({
+                success: false,
+                message: 'กรุณาระบุหมายเลขพัสดุสำหรับการจัดส่ง'
+            });
+        }
+        await orderService.shippedOrder(orderId, tracking_number, staffId);
         res.status(200).json({
             success: true,
             message: 'อัพเดทเป็นสถานะจัดส่งสำเร็จ'

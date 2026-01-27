@@ -25,7 +25,7 @@ export const pool = new Pool(dbConfig);
 
 // Event Listeners (เหมือนเดิม)
 pool.on('connect', (client: PoolClient) => {
-    // client.query("SET TIME ZONE 'UTC';"); // ถ้าต้องการบังคับ timezone
+    client.query("SET TIME ZONE 'UTC';"); // ถ้าต้องการบังคับ timezone
     // console.log('New client connected'); // ปิดไว้ก็ได้ครับ จะได้ไม่รก Console
 });
 

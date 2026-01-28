@@ -13,19 +13,19 @@ VALUES
 (3, 'user', '123456', 'user@gmail.com', 'User', 'User');
 
 -- 2.1 Order Statuses (สถานะคำสั่งซื้อ)
-INSERT INTO order_statuses (status_name, created_by) VALUES 
-('pending_payment', 1),  -- รอชำระเงิน
-('processing', 1),       -- กำลังเตรียมสินค้า
-('shipped', 1),          -- ส่งของแล้ว
-('delivered', 1),        -- ถึงมือลูกค้าแล้ว
-('cancelled', 1),        -- ยกเลิก
-('refunded', 1);         -- คืนเงิน
+INSERT INTO order_statuses (id, status_name, created_by) VALUES 
+(1, 'pending_payment', 1),  -- รอชำระเงิน
+(2, 'processing', 1),       -- กำลังเตรียมสินค้า
+(3, 'shipped', 1),          -- ส่งของแล้ว
+(4, 'delivered', 1),        -- ถึงมือลูกค้าแล้ว
+(5, 'cancelled', 1),        -- ยกเลิก
+(6, 'refunded', 1);         -- คืนเงิน
 
 -- 2.2 Payment Statuses (สถานะการเงินจาก Stripe)
-INSERT INTO payment_statuses (status_name, description, created_by) VALUES 
-('pending', 'Waiting for payment provider', 1),
-('successed', 'Payment received successfully', 1),
-('failed', 'Payment failed or declined', 1);
+INSERT INTO payment_statuses (id, status_name, description, created_by) VALUES 
+(1, 'pending', 'Waiting for payment provider', 1),
+(2, 'successed', 'Payment received successfully', 1),
+(3, 'failed', 'Payment failed or declined', 1);
 
 -- 2.3 Discount Types (ประเภทส่วนลด)
 INSERT INTO discount_types (discount_name, created_by) VALUES 
@@ -33,27 +33,27 @@ INSERT INTO discount_types (discount_name, created_by) VALUES
 ('fixed_amount', 1),     -- ลดเป็นบาท
 ('free_shipping', 1);    -- ส่งฟรี
 
-INSERT INTO prefixes (prefix_name, created_by) VALUES
-('นาย', 1),
-('นาง', 1),
-('นางสาว', 1);
+-- prefixes
+INSERT INTO prefixes (id, prefix_name, created_by) VALUES
+(1, 'นาย', 1),
+(2, 'นาง', 1),
+(3, 'นางสาว', 1);
 
--- ใส่ข้อมูลตั้งต้น
-INSERT INTO genders (gender_name, slug) VALUES 
-('ผู้ชาย', 'men'), 
-('ผู้หญิง', 'women'), 
-('เด็ก', 'kids');
+-- genders
+INSERT INTO genders (id, gender_name, slug) VALUES 
+(1, 'ผู้ชาย', 'men'), 
+(2, 'ผู้หญิง', 'women'), 
+(3, 'เด็ก', 'kids');
 
-INSERT INTO categories (category_name, category_code)
-VALUES
-('เสื้อยืด', 'T-SHIRT'),
-('เสื้อเชิ้ต', 'SHIRT'),
-('กางเกง', 'PANTS'),
-('กระโปรง', 'SKIRT'),
-('แจ็คเก็ต', 'JACKET'),
-('รองเท้า', 'SHOES'),
-('กระเป๋า', 'BAG');
-
+-- categories
+INSERT INTO categories (id, category_name, category_code) VALUES
+(1, 'เสื้อยืด', 'T-SHIRT'),
+(2, 'เสื้อเชิ้ต', 'SHIRT'),
+(3, 'กางเกง', 'PANTS'),
+(4, 'กระโปรง', 'SKIRT'),
+(5, 'แจ็คเก็ต', 'JACKET'),
+(6, 'รองเท้า', 'SHOES'),
+(7, 'กระเป๋า', 'BAG');
 
 -- สมมติ category_id = 1, gender_id = 1, created_by = 1
 INSERT INTO products (

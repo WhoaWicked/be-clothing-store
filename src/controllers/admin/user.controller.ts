@@ -5,10 +5,16 @@ import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const users = await userService.getUsers();
+        const filters = {
+            page: req.query.page ? Number(req.query.page) : 1,
+            limit: req.query.limit ? Number(req.query.limit) : 10,
+            search_global: req.query.search_global ? String(req.query.search_global) : undefined,
+            sort_type: req.query.sort_type ? String(req.query.sort_type) : 'newest'
+        }
+        const users = await userService.getUsers(filters);
         return res.status(200).json({
             success: true,
-            message: 'ดึงข้อมูลผู้ใช้งานสำเร็จ',
+            message: users.users.length === 0 ? 'ไม่พบผู้ใช้งานในระบบ' : 'ดึงข้อมูลผู้ใช้งานสำเร็จ',
             data: users
         });
     } catch (error: unknown) {
@@ -40,7 +46,7 @@ export const createUser = async (req: AuthenticatedRequest, res: Response, next:
     try {
         const adminId = req.user!.id;
         const userData: CreateUserRequest = req.body;
-        if (!userData.role_id || !userData.username || !userData.password || !userData.email || !userData.first_name || !userData.last_name) {
+        if (!userData.role_id || !userData.username || !userData.password || !userData.email || !userData.first_name || !userData.last_name || !userData.phone || !userData.prefix_id) {
             return res.status(400).json({
                 success: false,
                 message: 'ข้อมูลผู้ใช้งานไม่ครบถ้วน'
@@ -67,7 +73,7 @@ export const updateUserById = async (req: AuthenticatedRequest, res: Response, n
                 message: 'ไอดีผู้ใช้งานไม่ถูกต้อง'
             });
         }
-        if (!userData.role_id || !userData.username || !userData.email || !userData.first_name || !userData.last_name) {
+        if (!userData.role_id || !userData.username || !userData.email || !userData.first_name || !userData.last_name || !userData.phone || !userData.prefix_id) {
             return res.status(400).json({
                 success: false,
                 message: 'ข้อมูลผู้ใช้งานไม่ครบถ้วน'
@@ -82,6 +88,28 @@ export const updateUserById = async (req: AuthenticatedRequest, res: Response, n
         next(error);
     }
 }
+
+export const updateUserStatusById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const adminId = req.user!.id;
+        const id = Number(req.params.id);
+        const { is_active } = req.body;
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'ไอดีผู้ใช้งานไม่ถูกต้อง'
+            });
+        }
+        await userService.updateUserStatusById(is_active, id, adminId);
+        return res.status(200).json({
+            success: true,
+            message: 'แก้ไขสถานะผู้ใช้งานสำเร็จ'
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
 
 export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {

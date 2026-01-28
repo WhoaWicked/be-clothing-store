@@ -4,12 +4,32 @@ import { createHttpError } from '../../exceptions/http.exception';
 import bcrypt from 'bcrypt';
 import { CreateUserRequest, InsertUserValues, UpdateUserRequest, UpdateUserValues, UserById } from '../../types/admin/user.type';
 
-export const getUsers = async () => {
-    const users = await userRepository.findUsers();
-    if (!users || users.length === 0) {
-        throw createHttpError(404, 'ไม่พบผู้ใช้งานในระบบ');
+export const getUsers = async (filters: any) => {
+    const { page, limit } = filters;
+    const [users, totalItems] = await Promise.all([
+        userRepository.findUsers(filters),
+        userRepository.countUsers(filters)
+    ]);
+    if (users.length === 0) {
+        return {
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalItems / limit),
+                totalItems,
+                itemsPerPage: limit
+            },
+            users: []
+        }
     }
-    return users;
+    return {
+        pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(totalItems / limit),
+            totalItems,
+            itemsPerPage: limit
+        },
+        users
+    }
 }
 
 export const getUserById = async (id: number) => {
@@ -54,19 +74,29 @@ export const updateUserById = async (userData: UpdateUserRequest, id: number, up
     if (emailExists) { throw createHttpError(409, 'อีเมลนี้มีในระบบแล้ว'); }
     if (usernameExists) { throw createHttpError(409, 'ชื่อผู้ใช้นี้มีในระบบแล้ว'); }
     if (phoneExists) { throw createHttpError(409, 'เบอร์โทรศัพท์นี้มีในระบบแล้ว'); }
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    // const hashedPassword = await bcrypt.hash(userData.password, 10);
     const values: UpdateUserValues = {
         role_id: userData.role_id,
         username: userData.username.trim(),
-        password: hashedPassword,
+        // password: hashedPassword,
         email: userData.email.trim(),
         prefix_id: userData.prefix_id,
         first_name: userData.first_name.trim(),
         last_name: userData.last_name.trim(),
         phone: userData.phone.trim(),
+        is_active: userData.is_active,
         updated_by: updatedBy
     }
     await userRepository.updateUserById(values, id);
+    return;
+}
+
+export const updateUserStatusById = async (isActive: boolean, id: number, updatedBy: number) => {
+    const user: UserById = await getUserById(id);
+    if (!user) {
+        throw createHttpError(404, 'ไม่พบผู้ใช้งานในระบบ');
+    }
+    await userRepository.updateStatusById(isActive, id, updatedBy);
     return;
 }
 

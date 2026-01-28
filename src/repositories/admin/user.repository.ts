@@ -1,10 +1,92 @@
 import { query } from '../../config/db-middleware';
 import { InsertUserValues, UpdateUserValues, UserById, UserList } from '../../types/admin/user.type';
 
-export const findUsers = async (): Promise<UserList[]> => {
-    const queryStr: string = 'SELECT * FROM users;';
-    const response = await query(queryStr);
-    return response.rows;
+export const countUsers = async (filters: any) => {
+    const { search_global } = filters;
+    const conditions = [];
+    const params: any[] = [];
+    let paramCount = 0;
+    if (search_global) {
+        paramCount++;
+        conditions.push(`(
+            u.username       ILIKE $${paramCount} OR
+            u.email          ILIKE $${paramCount} OR
+            u.first_name     ILIKE $${paramCount} OR
+            u.last_name      ILIKE $${paramCount} OR
+            u.phone          ILIKE $${paramCount}
+            )`);
+        params.push(`%${search_global}%`);
+    }
+    let queryStr = `
+    SELECT 
+ 	COUNT (*) AS total
+    FROM users u
+    JOIN prefixes p ON u.prefix_id = p.id
+    JOIN roles r ON u.role_id = r.id
+    `;
+    if (conditions.length > 0) {
+        queryStr += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    const { rows } = await query(queryStr, params);
+    return Number(rows[0].total);
+}
+
+export const findUsers = async (filters: any): Promise<UserList[]> => {
+    const { page, limit, search_global, sort_type } = filters;
+    const offset = (page - 1) * limit;
+    const conditions = [];
+    const params: any[] = [];
+    let paramCount = 0;
+    if (search_global) {
+        paramCount++;
+        conditions.push(`(
+            u.username       ILIKE $${paramCount} OR
+            u.email          ILIKE $${paramCount} OR
+            u.first_name     ILIKE $${paramCount} OR
+            u.last_name      ILIKE $${paramCount} OR
+            u.phone          ILIKE $${paramCount}
+            )`);
+        params.push(`%${search_global}%`);
+    }
+    let sortClause = 'u.created_at DESC';
+    switch (sort_type) {
+        case 'oldest':
+            sortClause = 'u.created_at ASC';
+            break;
+        case 'newest':
+        default:
+            sortClause = 'u.created_at DESC';
+            break;
+    }
+    let queryStr: string = `
+    SELECT 
+    u.id,
+    u.role_id,
+    r.role_name,
+    u.username,
+    u.password,
+    u.email,
+    u.prefix_id,
+    p.prefix_name,
+    u.first_name,
+    u.last_name,
+    CONCAT (u.first_name, ' ', u.last_name) AS full_name,
+    u.phone,
+    u.is_active,
+    u.last_login,
+    u.created_at,
+    u.updated_at
+    FROM users u
+    JOIN prefixes p ON u.prefix_id = p.id
+    JOIN roles r ON u.role_id = r.id
+    `;
+    if (conditions.length > 0) {
+        queryStr += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    queryStr += `ORDER BY ${sortClause} LIMIT $${++paramCount} OFFSET $${++paramCount};`;
+    params.push(limit, offset);
+    const { rows } = await query(queryStr, params);
+    return rows;
 }
 
 export const findUserById = async (id: number): Promise<UserById> => {
@@ -20,8 +102,14 @@ export const insertUser = async (values: InsertUserValues) => {
 }
 
 export const updateUserById = async (values: UpdateUserValues, id: number) => {
-    const queryStr: string = 'UPDATE users SET role_id = $1, username = $2, password = $3, email = $4, prefix_id = $5, first_name = $6, last_name = $7, phone = $8, updated_by = $9 WHERE id = $10;';
-    await query(queryStr, [values.role_id, values.username, values.password, values.email, values.prefix_id, values.first_name, values.last_name, values.phone, values.updated_by, id]);
+    const queryStr: string = 'UPDATE users SET role_id = $1, username = $2, email = $3, prefix_id = $4, first_name = $5, last_name = $6, phone = $7, updated_by = $8, is_active = $9, updated_at = NOW() WHERE id = $10;';
+    await query(queryStr, [values.role_id, values.username, values.email, values.prefix_id, values.first_name, values.last_name, values.phone, values.updated_by, values.is_active, id]);
+    return;
+}
+
+export const updateStatusById = async (isActive: boolean, id: number, updatedBy: number) => {
+    const queryStr: string = 'UPDATE users SET is_active = $1, updated_by = $2 WHERE id = $3;';
+    await query(queryStr, [isActive, updatedBy, id]);
     return;
 }
 

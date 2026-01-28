@@ -41,13 +41,14 @@ export type InsertUserValues = [
 export interface UpdateUserValues {
     role_id: number;
     username: string;
-    password: string;
+    // password: string;
     email: string;
     prefix_id: number;
     first_name: string;
     last_name: string;
     phone: string;
     updated_by: number;
+    is_active: boolean;
 }
 
 export interface CreateUserRequest {
@@ -70,4 +71,5 @@ export interface UpdateUserRequest {
     first_name: string;
     last_name: string;
     phone: string;
+    is_active: boolean;
 }

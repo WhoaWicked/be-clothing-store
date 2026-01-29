@@ -137,6 +137,7 @@ export const findOrderById = async (orderId: number) => {
     o.id AS order_id,
     o.order_code,
     o.total_amount,
+    o.order_status_id,
     os.status_name AS order_status,
     ps.status_name AS payment_status,
     o.shipping_address,
@@ -184,10 +185,11 @@ export const updateCancelledStatus = async (orderId: number, cancelledReason: st
         cancelled_reason = $1,
         cancelled_at = NOW(),
         cancelled_by = $2
-        WHERE id = $3;
+        WHERE id = $3
+        RETURNING order_status_id;
     `;
-    await query(queryStr, [cancelledReason, cancelledBy, orderId]);
-    return;
+    const response = await query(queryStr, [cancelledReason, cancelledBy, orderId]);
+    return response.rows[0].order_status_id;
 }
 
 export const updateShippedStatus = async (orderId: number, trackingNumber: string, updatedBy: number) => {
@@ -198,10 +200,11 @@ export const updateShippedStatus = async (orderId: number, trackingNumber: strin
         tracking_number = $1,
         updated_by = $2,
         updated_at = NOW()
-        WHERE id = $3;
+        WHERE id = $3
+        RETURNING order_status_id;
     `;
-    await query(queryStr, [trackingNumber, updatedBy, orderId]);
-    return;
+    const response = await query(queryStr, [trackingNumber, updatedBy, orderId]);
+    return response.rows[0].order_status_id;
 }
 
 export const updateDeliveredStatus = async (orderId: number, updatedBy: number) => {
@@ -211,10 +214,11 @@ export const updateDeliveredStatus = async (orderId: number, updatedBy: number) 
         order_status_id = 4,
         updated_by = $2,
         updated_at = NOW()
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING order_status_id;
     `;
-    await query(queryStr, [orderId, updatedBy]);
-    return;
+    const response = await query(queryStr, [orderId, updatedBy]);
+    return response.rows[0].order_status_id;
 }
 
 export const findOrderByTrackingNumber = async (trackingNumber: string) => {

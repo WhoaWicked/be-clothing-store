@@ -52,7 +52,14 @@ export const createUser = async (req: AuthenticatedRequest, res: Response, next:
                 message: 'ข้อมูลผู้ใช้งานไม่ครบถ้วน'
             });
         }
-        await userService.createUser(userData, adminId);
+        const userContext = {
+            actorId: adminId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await userService.createUser(userData, adminId, userContext);
         return res.status(201).json({
             success: true,
             message: 'สร้างผู้ใช้งานสำเร็จ'
@@ -79,7 +86,14 @@ export const updateUserById = async (req: AuthenticatedRequest, res: Response, n
                 message: 'ข้อมูลผู้ใช้งานไม่ครบถ้วน'
             });
         }
-        await userService.updateUserById(userData, id, adminId);
+        const userContext = {
+            actorId: adminId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await userService.updateUserById(userData, id, adminId, userContext);
         return res.status(200).json({
             success: true,
             message: 'แก้ไขข้อมูลผู้ใช้งานสำเร็จ'
@@ -100,7 +114,14 @@ export const updateUserStatusById = async (req: AuthenticatedRequest, res: Respo
                 message: 'ไอดีผู้ใช้งานไม่ถูกต้อง'
             });
         }
-        await userService.updateUserStatusById(is_active, id, adminId);
+        const userContext = {
+            actorId: adminId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await userService.updateUserStatusById(is_active, id, adminId, userContext);
         return res.status(200).json({
             success: true,
             message: 'แก้ไขสถานะผู้ใช้งานสำเร็จ'
@@ -111,16 +132,24 @@ export const updateUserStatusById = async (req: AuthenticatedRequest, res: Respo
 }
 
 
-export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUserById = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const id = Number(req.params.id);
+        const adminId = req.user!.id;
         if (isNaN(id) || id <= 0) {
             return res.status(400).json({
                 success: false,
                 message: 'ไอดีผู้ใช้งานไม่ถูกต้อง'
             });
         }
-        await userService.deleteUserById(id);
+        const userContext = {
+            actorId: adminId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await userService.deleteUserById(id, userContext);
         return res.status(200).json({
             success: true,
             message: 'ลบผู้ใช้งานสำเร็จ'

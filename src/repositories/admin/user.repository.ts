@@ -96,9 +96,9 @@ export const findUserById = async (id: number): Promise<UserById> => {
 }
 
 export const insertUser = async (values: InsertUserValues) => {
-    const queryStr: string = 'INSERT INTO users (role_id, username, password, email, prefix_id, first_name, last_name, phone, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);';
-    await query(queryStr, values);
-    return;
+    const queryStr: string = 'INSERT INTO users (role_id, username, password, email, prefix_id, first_name, last_name, phone, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;';
+    const response = await query(queryStr, values);
+    return response.rows[0].id;
 }
 
 export const updateUserById = async (values: UpdateUserValues, id: number) => {

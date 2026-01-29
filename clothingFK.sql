@@ -84,11 +84,6 @@ ALTER TABLE reviews
     ADD FOREIGN KEY (created_by) REFERENCES users(id),
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);
 
-ALTER TABLE activity_logs
-    ADD FOREIGN KEY (user_id) REFERENCES users(id),
-    ADD FOREIGN KEY (created_by) REFERENCES users(id),
-    ADD FOREIGN KEY (updated_by) REFERENCES users(id);
-
 ALTER TABLE prefixes
     ADD FOREIGN KEY (created_by) REFERENCES users(id),
     ADD FOREIGN KEY (updated_by) REFERENCES users(id);

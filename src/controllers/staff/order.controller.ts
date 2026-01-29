@@ -38,7 +38,14 @@ export const cancelledOrder = async (req: AuthenticatedRequest, res: Response, n
                 message: 'กรุณาระบุเหตุผลในการยกเลิกคำสั่งซื้อ'
             });
         }
-        await orderService.cancelledOrder(orderId, cancelledReason, staffId);
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await orderService.cancelledOrder(orderId, cancelledReason, staffId, userContext);
         res.status(200).json({
             success: true,
             message: 'ยกเลิกคำสั่งซื้อสำเร็จ'
@@ -59,7 +66,14 @@ export const shippedOrder = async (req: AuthenticatedRequest, res: Response, nex
                 message: 'กรุณาระบุหมายเลขพัสดุสำหรับการจัดส่ง'
             });
         }
-        await orderService.shippedOrder(orderId, tracking_number, staffId);
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await orderService.shippedOrder(orderId, tracking_number, staffId, userContext);
         res.status(200).json({
             success: true,
             message: 'อัพเดทเป็นสถานะจัดส่งสำเร็จ'
@@ -73,7 +87,14 @@ export const deliveredOrder = async (req: AuthenticatedRequest, res: Response, n
     try {
         const staffId = req.user!.id;
         const orderId = Number(req.params.orderId);
-        await orderService.deliveredOrder(orderId, staffId);
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await orderService.deliveredOrder(orderId, staffId, userContext);
         res.status(200).json({
             success: true,
             message: 'อัพเดทเป็นสถานะจัดส่งแล้วสำเร็จ'

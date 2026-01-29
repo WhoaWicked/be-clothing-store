@@ -5,6 +5,7 @@ import { deleteImageFromCloudinary } from '../../utils/cloudinary/upload.middlew
 import { createHttpError } from '../../exceptions/http.exception';
 import { generateProductCode, handleImageCleanup } from '../../utils/product.utill';
 import { pool } from '../../config/db-middleware';
+import { logActivity } from '../../utils/logger.util';
 
 const checkCategoryAndProductName = async (productData: CreateProductRequest | UpdateProductRequest, id?: number) => {
     const [categoryExists, genderExists, productNameExists, productExists] = await Promise.all([
@@ -84,7 +85,7 @@ export const getProductById = async (id: number) => {
 //     await productRepository.insertProduct(values);
 //     return;
 // }
-export const createProduct = async (productData: CreateProductRequest, createdBy: number) => {
+export const createProduct = async (productData: CreateProductRequest, createdBy: number, userContext: any) => {
     await checkCategoryAndProductName(productData);
     const client = await pool.connect();
     try {
@@ -121,18 +122,52 @@ export const createProduct = async (productData: CreateProductRequest, createdBy
             });
         }
         await client.query('COMMIT');
+
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_CREATE_PRODUCT',
+            resourceType: 'products',
+            resourceId: newProductId,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'สร้างสินค้าสำเร็จ',
+                data: { ...productData, product_code }
+            }
+        });
         return;
-    } catch (error) {
+    } catch (error: unknown) {
         await client.query('ROLLBACK');
         await handleImageCleanup(productData.image_path);
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_CREATE_PRODUCT_FAILED',
+            resourceType: 'products',
+            resourceId: productData.product_name,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                data: { ...productData }
+            }
+        });
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการสร้างสินค้า: ' + (error as Error).message);
     } finally {
         client.release();
     }
 }
 
-export const updateProduct = async (productData: UpdateProductRequest, id: number, updatedBy: number) => {
+export const updateProduct = async (productData: UpdateProductRequest, id: number, updatedBy: number, userContext: any) => {
     const imagePathExists = await checkCategoryAndProductName(productData, id);
+    const oldProduct = await productRepository.findProductById(id);
+    const variantLogs: any[] = [];
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -167,6 +202,19 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
                     updatedBy: updatedBy
                 }
                 await productVariantRepository.updateProductVariantById(client, updateValues, variant.id);
+                if (existingVariant.stock_quantity !== variant.stock_quantity) {
+                    variantLogs.push({
+                        action: 'UPDATE_VARIANT_STOCK',
+                        id: variant.id,
+                        size: existingVariant.size,
+                        changes: {
+                            stock_quantity: {
+                                from: existingVariant.stock_quantity,
+                                to: variant.stock_quantity
+                            }
+                        }
+                    });
+                }
             } else {
                 const existingSize = await productVariantRepository.findProductVariantByProductIdAndSize(id, variant.size);
                 if (existingSize) {
@@ -185,20 +233,77 @@ export const updateProduct = async (productData: UpdateProductRequest, id: numbe
                     created_by: updatedBy
                 }
                 await productVariantRepository.insertProductVariant(client, insertValues);
+                variantLogs.push({
+                    action: 'CREATE_VARIANT',
+                    size: variant.size,
+                    stock_quantity: variant.stock_quantity
+                });
             }
         }
         await client.query('COMMIT');
+        const changes: Record<string, any> = {};
+        const fieldToCheck = [
+            'category_id',
+            'gender_id',
+            'product_name',
+            'description',
+            'base_price',
+            'image_path',
+            'best_seller',
+            'is_active',
+        ];
+        fieldToCheck.forEach((field: any) => {
+            const oldValue = (oldProduct as any)[field];
+            const newValue = (productData as any)[field];
+            if (oldValue !== newValue) {
+                changes[field] = { old: oldValue, new: newValue };
+            }
+        });
+        if (variantLogs.length > 0) {
+            changes['variants'] = variantLogs;
+        }
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_UPDATE_PRODUCT',
+            resourceType: 'products',
+            resourceId: id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'แก้ไขสินค้าสำเร็จ',
+                diff: changes
+            }
+        });
         return;
     } catch (error: unknown) {
         await client.query('ROLLBACK');
         await handleImageCleanup(productData.image_path);
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_UPDATE_PRODUCT_FAILED',
+            resourceType: 'products',
+            resourceId: id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                data: { ...productData }
+            }
+        });
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการแก้ไขสินค้า: ' + (error as Error).message);
     } finally {
         client.release();
     }
 }
 
-export const updateProductStatus = async (id: number, is_active: boolean, updatedBy: number) => {
+export const updateProductStatus = async (id: number, is_active: boolean, updatedBy: number, userContext: any) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -208,11 +313,43 @@ export const updateProductStatus = async (id: number, is_active: boolean, update
         }
         await productRepository.updateProductStatusById(client, is_active, id, updatedBy);
         await client.query('COMMIT');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_UPDATE_PRODUCT_STATUS',
+            resourceType: 'products',
+            resourceId: id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'แก้ไขสถานะสินค้าสำเร็จ',
+                diff: {
+                    from: existingProduct.is_active,
+                    to: is_active
+                }
+            }
+        });
         return;
     } catch (error: unknown) {
         await client.query('ROLLBACK');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_UPDATE_PRODUCT_STATUS_FAILED',
+            resourceType: 'products',
+            resourceId: id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+            }
+        });
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการแก้ไขสินค้า: ' + (error as Error).message);
-
     }
 }
 
@@ -240,7 +377,7 @@ export const updateProductStatus = async (id: number, is_active: boolean, update
 //     return;
 // }
 
-export const deleteProduct = async (id: number) => {
+export const deleteProduct = async (id: number, userContext: any) => {
     const existingProduct = await productRepository.findProductById(id);
     if (!existingProduct) {
         throw createHttpError(404, 'ไม่พบสินค้าที่ต้องการลบ');
@@ -262,9 +399,40 @@ export const deleteProduct = async (id: number) => {
             responseMessage = 'ลบสินค้าออกจากระบบเรียบร้อยแล้ว';
         }
         await client.query('COMMIT');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_DELETE_PRODUCT',
+            resourceType: 'products',
+            resourceId: id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: responseMessage,
+                data: { ...existingProduct }
+            }
+        });
         return responseMessage;
     } catch (error: unknown) {
         await client.query('ROLLBACK');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'STAFF_DELETE_PRODUCT_FAILED',
+            resourceType: 'products',
+            resourceId: id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                data: { ...existingProduct }
+            }
+        });
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการลบสินค้า: ' + (error as Error).message);
     } finally {
         client.release();

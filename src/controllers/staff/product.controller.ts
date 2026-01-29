@@ -1,5 +1,5 @@
 // Middleware type for authenticated requests
-import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
+import { AuthenticatedRequest, staff } from '../../middlewares/auth.middleware';
 // Product service functions
 import * as productService from '../../services/staff/product.service';
 import { Request, Response, NextFunction } from 'express';
@@ -107,7 +107,14 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response, ne
             throw createHttpError(400, 'รูปแบบข้อมูล variants ไม่ถูกต้อง');
         }
         if (req?.file?.path) { requestData.image_path = req.file.path; }
-        await productService.createProduct(requestData, staffId);
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await productService.createProduct(requestData, staffId, userContext);
         res.status(201).json({
             success: true,
             message: 'สร้างสินค้าสำเร็จ'
@@ -136,8 +143,15 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response, ne
         }
         // ถ้ามีไฟล์ภาพแนบมา ให้เพิ่ม path ลงในข้อมูล
         if (req?.file?.path) { requestData.image_path = req.file.path; }
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
         // เรียก service เพื่ออัปเดตสินค้า
-        await productService.updateProduct(requestData, id, staffId);
+        await productService.updateProduct(requestData, id, staffId, userContext);
         res.status(200).json({
             success: true,
             message: 'แก้ไขสินค้าสำเร็จ'
@@ -153,7 +167,14 @@ export const updateProductStatus = async (req: AuthenticatedRequest, res: Respon
         const id: number = parseInt(req.params.id);
         const { is_active } = req.body;
         validateProductId(id);
-        await productService.updateProductStatus(id, is_active, staffId);
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await productService.updateProductStatus(id, is_active, staffId, userContext);
         res.status(200).json({
             success: true,
             message: 'แก้ไขสถานะสินค้าสำเร็จ'
@@ -168,9 +189,17 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response, ne
     try {
         // รับ id สินค้าจาก params และตรวจสอบ
         const id: number = Number(req.params.id);
+        const staffId = req.user!.id;
         validateProductId(id);
+        const userContext = {
+            actorId: staffId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
         // เรียก service เพื่อลบสินค้า
-        const response = await productService.deleteProduct(id);
+        const response = await productService.deleteProduct(id, userContext);
         res.status(200).json({
             success: true,
             message: response

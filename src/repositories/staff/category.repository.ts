@@ -86,9 +86,9 @@ export const findCategoryByCode = async (category_code: string) => {
 }
 
 export const insertCategory = async (values: InsertCategoryValues) => {
-    const queryStr: string = 'INSERT INTO categories (category_name, category_code, created_by) VALUES ($1, $2, $3);';
-    await query(queryStr, [values.category_name, values.category_code, values.created_by]);
-    return;
+    const queryStr: string = 'INSERT INTO categories (category_name, category_code, created_by) VALUES ($1, $2, $3) RETURNING id;';
+    const response = await query(queryStr, [values.category_name, values.category_code, values.created_by]);
+    return response.rows[0].id;
 }
 
 export const updateCategoryById = async (values: UpdateCategoryValues, id: number) => {

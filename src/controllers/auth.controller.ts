@@ -11,7 +11,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 message: "กรุณากรอกอีเมลและรหัสผ่านให้ครบถ้วน",
             });
         }
-        const accessToken: string = await authService.authenticateUser(email, password);
+        const userContext = {
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown',
+        }
+        const accessToken: string = await authService.authenticateUser(email, password, userContext);
         return res.status(200).json({
             success: true,
             message: "เข้าสู่ระบบสำเร็จ",

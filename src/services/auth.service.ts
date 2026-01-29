@@ -7,6 +7,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { DateTime } from "luxon";
 import { createHttpError } from '../exceptions/http.exception';
+import { logActivity } from '../utils/logger.util';
 
 // 1. login service
 export const getUserByEmail = async (email: string) => {
@@ -30,20 +31,55 @@ export const updateLastLogin = async (id: number) => {
     return;
 }
 
-export const authenticateUser = async (email: string, password: string) => {
-    const user: UserFields = await getUserByEmail(email);
-    if (!user) { throw createHttpError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'); }
-    await verifyPassword(password, user.password);
-    await updateLastLogin(user.id);
-    const payload: UserPayload = {
-        id: user.id,
-        role: user.role_name,
-        username: user.username
+export const authenticateUser = async (email: string, password: string, userContext: any) => {
+    let user: UserFields | null = null;
+    try {
+        user = await getUserByEmail(email);
+        if (!user) { throw createHttpError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'); }
+        await verifyPassword(password, user.password);
+        await updateLastLogin(user.id);
+        const payload: UserPayload = {
+            id: user.id,
+            role: user.role_name,
+            username: user.username
+        }
+        const accessToken = jwt.sign(payload, String(process.env.JWT_SECRET), {
+            expiresIn: '48h',
+        });
+        logActivity({
+            actorId: user.id,
+            actorName: user.username,
+            role: user.role_name,
+            action: 'LOGIN',
+            resourceType: 'auth',
+            resourceId: user.id,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'เข้าสู่ระบบสำเร็จ'
+            }
+        });
+        return accessToken;
+    } catch (error: unknown) {
+        logActivity({
+            actorId: user ? user.id : null,
+            actorName: user ? user.username : email,
+            role: user ? user.role_name : 'Guest',
+            action: 'LOGIN_FAILED',
+            resourceType: 'auth',
+            resourceId: email,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                attempted_email: email
+            }
+        });
+        throw error;
     }
-    const accessToken = jwt.sign(payload, String(process.env.JWT_SECRET), {
-        expiresIn: '48h',
-    });
-    return accessToken;
 }
 
 // 2. Register

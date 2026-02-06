@@ -2,6 +2,7 @@ import * as orderRepository from '../../repositories/user/order.repository';
 import { query, pool } from '../../config/db-middleware';
 import { createHttpError } from '../../exceptions/http.exception';
 import Stripe from 'stripe';
+import { logActivity } from '../../utils/logger.util';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: '2025-12-15.clover',
@@ -9,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-export const placeOrder = async (userId: number, shippingAddress: string) => {
+export const placeOrder = async (userId: number, shippingAddress: string, userContext: any) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -75,16 +76,57 @@ export const placeOrder = async (userId: number, shippingAddress: string) => {
         }
         await orderRepository.deleteUserCartItems(client, checkUserCart.id);
         await client.query('COMMIT');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'USER_PLACE_ORDER',
+            resourceType: 'orders',
+            resourceId: newOrderId,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'สร้างคำสั่งซื้อสำเร็จ',
+                data: {
+                    order_code,
+                    total_amount: totalAmount,
+                    shipping_address: shippingAddress,
+                    stripe_session_id: session.id,
+                    payment_status: 'pending',
+                    order_items: cartItems
+                }
+            }
+        });
         return { checkoutUrl: session.url };
     } catch (error: unknown) {
         await client.query('ROLLBACK');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'USER_PLACE_ORDER_FAILED',
+            resourceType: 'orders',
+            resourceId: null,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                data: {
+                    userId,
+                    shippingAddress
+                }
+            }
+        });
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ: ' + (error as Error).message);
     } finally {
         client.release();
     }
 }
 
-export const repayOrder = async (orderId: number, userId: number) => {
+export const repayOrder = async (orderId: number, userId: number, userContext: any) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -121,8 +163,45 @@ export const repayOrder = async (orderId: number, userId: number) => {
         });
         await orderRepository.updateOrderStripeSessionId(client, session.id, orderId);
         await client.query('COMMIT');
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'USER_REPAY_ORDER',
+            resourceType: 'orders',
+            resourceId: orderId,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'ชำระเงินคำสั่งซื้อใหม่สำเร็จ',
+                data: {
+                    order: existingOrder,
+                    order_items: orderItems,
+                    stripe_session_id: session.id
+                }
+            }
+        });
         return { checkoutUrl: session.url };
     } catch (error: unknown) {
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'USER_REPAY_ORDER_FAILED',
+            resourceType: 'orders',
+            resourceId: orderId,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                data: {
+                    userId,
+                }
+            }
+        });
         throw createHttpError(500, 'เกิดข้อผิดพลาดในการชำระเงินคำสั่งซื้อ: ' + (error as Error).message);
     }
     finally {
@@ -176,15 +255,60 @@ export const getOrderList = async (userId: number, orderStatusName: string | nul
     return orders;
 }
 
-export const cancelUserOrder = async (orderId: number, userId: number, cancelledReason: string) => {
-    const client = await pool.connect();
-    const existingOrder = await orderRepository.findOrderById(client, orderId, userId);
-    if (!existingOrder) {
-        throw createHttpError(404, 'ไม่พบคำสั่งซื้อที่ต้องการยกเลิก');
+export const cancelUserOrder = async (orderId: number, userId: number, cancelledReason: string, userContext: any) => {
+    try {
+        const client = await pool.connect();
+        const existingOrder = await orderRepository.findOrderById(client, orderId, userId);
+        if (!existingOrder) {
+            throw createHttpError(404, 'ไม่พบคำสั่งซื้อที่ต้องการยกเลิก');
+        }
+        if (existingOrder.order_status_id === 5) {
+            throw createHttpError(400, 'คำสั่งซื้อนี้ถูกยกเลิกไปแล้ว');
+        }
+        const newStatusId = await orderRepository.cancelOrder(orderId, userId, cancelledReason);
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'USER_CANCEL_ORDER',
+            resourceType: 'orders',
+            resourceId: orderId,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: true,
+            details: {
+                message: 'ยกเลิกคำสั่งซื้อสำเร็จ',
+                diff: {
+                    order_status_id: {
+                        from: existingOrder.order_status_id,
+                        to: newStatusId
+                    },
+                    order_status_name: {
+                        from: 'pending_payment',
+                        to: 'cancelled'
+                    },
+                    cancelledReason
+                }
+            }
+        });
+        return;
+    } catch (error: unknown) {
+        logActivity({
+            actorId: userContext.actorId,
+            actorName: userContext.actorName,
+            role: userContext.role,
+            action: 'USER_CANCEL_ORDER_FAILED',
+            resourceType: 'orders',
+            resourceId: orderId,
+            ip: userContext.ip,
+            userAgent: userContext.userAgent,
+            isSuccess: false,
+            details: {
+                error: (error as Error).message,
+                status: (error as any).status || 500,
+                cancelledReason
+            }
+        });
+        throw error;
     }
-    if (existingOrder.order_status_id === 5) {
-        throw createHttpError(400, 'คำสั่งซื้อนี้ถูกยกเลิกไปแล้ว');
-    }
-    await orderRepository.cancelOrder(orderId, userId, cancelledReason);
-    return;
 }

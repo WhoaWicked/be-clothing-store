@@ -42,7 +42,14 @@ export const createAddress = async (req: AuthenticatedRequest, res: Response, ne
             return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน' });
         }
         const values = { street, sub_district, district, province, zip_code, first_name, last_name, phone };
-        const newAddress = await addressService.createAddress(userId, values);
+        const userContext = {
+            actorId: userId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        };
+        const newAddress = await addressService.createAddress(userId, values, userContext);
         res.status(201).json({
             success: true,
             message: 'สร้างที่อยู่ใหม่สำเร็จ',
@@ -65,7 +72,14 @@ export const updateAddress = async (req: AuthenticatedRequest, res: Response, ne
             return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน' });
         }
         const values = { street, sub_district, district, province, zip_code, first_name, last_name, phone };
-        const updatedAddress = await addressService.updateAddress(addressId, userId, values);
+        const userContext = {
+            actorId: userId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        };
+        const updatedAddress = await addressService.updateAddress(addressId, userId, values, userContext);
         res.status(200).json({
             success: true,
             message: 'อัพเดตที่อยู่สำเร็จ',
@@ -83,7 +97,14 @@ export const deleteAddress = async (req: AuthenticatedRequest, res: Response, ne
         if (!addressId || addressId <= 0) {
             return res.status(400).json({ success: false, message: 'กรุณาระบุที่อยู่ที่ต้องการลบ' });
         }
-        await addressService.deleteAddress(addressId, userId);
+        const userContext = {
+            actorId: userId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        };
+        await addressService.deleteAddress(addressId, userId, userContext);
         res.status(200).json({
             success: true,
             message: 'ลบที่อยู่สำเร็จ',

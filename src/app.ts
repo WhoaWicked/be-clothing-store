@@ -3,6 +3,7 @@ import cors from 'cors';
 import healthCheckRouter from './routes/health-check.route';
 import authRouter from './routes/auth.route';
 import adminUserRouter from './routes/admin/user.route';
+import adminLogRouter from './routes/admin/logger.route';
 import staffProductRouter from './routes/staff/product.route';
 import staffProductVariantRouter from './routes/staff/productVariant.route';
 import staffCategoryRouter from './routes/staff/category.route';
@@ -33,6 +34,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use(healthCheckRouter);
 app.use(authRouter);
 app.use(adminUserRouter);
+app.use(adminLogRouter);
 app.use(staffProductRouter);
 app.use(staffProductVariantRouter);
 app.use(staffCategoryRouter);

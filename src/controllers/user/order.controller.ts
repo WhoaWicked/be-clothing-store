@@ -12,7 +12,14 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response, next
         ) {
             return res.status(400).json({ message: 'กรุณาระบุที่อยู่สำหรับจัดส่งให้ครบถ้วน' });
         }
-        const result = await orderService.placeOrder(userId, JSON.stringify(shippingAddress));
+        const userContext = {
+            actorId: userId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        const result = await orderService.placeOrder(userId, JSON.stringify(shippingAddress), userContext);
         res.status(200).json({
             success: true,
             message: 'สร้างคำสั่งซื้อสำเร็จ',
@@ -47,7 +54,14 @@ export const repayOrder = async (req: AuthenticatedRequest, res: Response, next:
         if (!orderId || isNaN(orderId) || orderId <= 0) {
             return res.status(400).json({ message: 'รหัสคำสั่งซื้อไม่ถูกต้อง' });
         }
-        const response = await orderService.repayOrder(orderId, userId);
+        const userContext = {
+            actorId: userId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        const response = await orderService.repayOrder(orderId, userId, userContext);
         res.status(200).json({
             success: true,
             message: 'สร้างลิงก์ชำระเงินใหม่สำเร็จ',
@@ -91,7 +105,14 @@ export const cancelOrder = async (req: AuthenticatedRequest, res: Response, next
         if (!cancelledReason) {
             return res.status(400).json({ message: 'กรุณาระบุเหตุผลในการยกเลิกคำสั่งซื้อ' });
         }
-        await orderService.cancelUserOrder(orderId, userId, cancelledReason);
+        const userContext = {
+            actorId: userId,
+            actorName: req.user!.username,
+            role: req.user!.role,
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown'
+        }
+        await orderService.cancelUserOrder(orderId, userId, cancelledReason, userContext);
         res.status(200).json({
             success: true,
             message: 'ยกเลิกคำสั่งซื้อสำเร็จ',

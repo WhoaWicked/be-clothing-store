@@ -1,5 +1,4 @@
-import * as loggerRepository from '../repositories/logger.repository';
-import { createHttpError } from '../exceptions/http.exception';
+import * as loggerRepository from '../repositories/admin/logger.repository';
 
 export interface LogData {
     actorId?: number | null;
@@ -7,7 +6,7 @@ export interface LogData {
     role: string;
     action: string;
     resourceType: string;
-    resourceId: string | number;
+    resourceId: string | number | null;
     details: object;
     ip: string;
     userAgent: string;

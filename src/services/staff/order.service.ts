@@ -79,7 +79,8 @@ export const cancelledOrder = async (orderId: number, cancelledReason: string, s
             isSuccess: false,
             details: {
                 error: (error as Error).message,
-                status: (error as any).status || 500
+                status: (error as any).status || 500,
+                cancelledReason
             }
         });
         throw error;
@@ -136,7 +137,8 @@ export const shippedOrder = async (orderId: number, trackingNumber: string, upda
             isSuccess: false,
             details: {
                 error: (error as Error).message,
-                status: (error as any).status || 500
+                status: (error as any).status || 500,
+                trackingNumber
             }
         });
         throw error;

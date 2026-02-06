@@ -108,10 +108,11 @@ export const cancelOrder = async (orderId: number, userId: number, cancelledReas
         cancelled_reason = $1,
         cancelled_at = NOW(),
         cancelled_by = $2
-    WHERE id = $3 AND user_id = $2;
+    WHERE id = $3 AND user_id = $2
+    RETURNING order_status_id;
     `;
-    await query(queryStr, [cancelledReason, userId, orderId]);
-    return;
+    const response = await query(queryStr, [cancelledReason, userId, orderId]);
+    return response.rows[0].order_status_id;
 }
 
 export const findOrderListByUserId = async (userId: number, orderStatusName: string | null) => {

@@ -23,7 +23,7 @@ router.get(BASE_URL, protect, async (req: AuthenticatedRequest, res: Response, n
         u.phone,
         u.created_at
         FROM users u
-        JOIN prefixes p ON u.prefix_id = p.id
+        LEFT JOIN prefixes p ON u.prefix_id = p.id
         WHERE u.id = $1;
         `;
         const response = await query(queryStr, [userId]);

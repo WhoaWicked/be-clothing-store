@@ -28,6 +28,32 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 }
 
+export const loginWithGoogle = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, name, googleId, image } = req.body;
+        if (!email || !googleId) {
+            return res.status(400).json({
+                success: false,
+                message: "ข้อมูลจาก Google ไม่ครบถ้วน",
+            });
+        }
+        const userContext = {
+            ip: req.ip || req.socket.remoteAddress || '0.0.0.0',
+            userAgent: req.headers['user-agent'] || 'unknown',
+        }
+        const accessToken: string = await authService.authenticateWithGoogle({ email, name, googleId, image }, userContext);
+        return res.status(200).json({
+            success: true,
+            message: "เข้าสู่ระบบด้วย Google สำเร็จ",
+            data: {
+                access_token: accessToken,
+            },
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+}
+
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userData: RegisterData = req.body;

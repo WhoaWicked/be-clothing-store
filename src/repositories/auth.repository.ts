@@ -1,5 +1,5 @@
 import { query } from '../config/db-middleware';
-import { CreateUserValues } from '../types/auth.type';
+import { CreateUserValues, CreateUserWithGoogle } from '../types/auth.type';
 
 // 1. Login
 export const findUserByEmail = async (email: string) => {
@@ -40,3 +40,23 @@ export const insertNewUser = async (values: CreateUserValues) => {
     await query(queryStr, values);
     return;
 }
+
+export const insertNewUserWithGoogle = async (value: CreateUserWithGoogle) => {
+    const { role_id, username, password, email, first_name, last_name, image, provider, provider_id } = value;
+    const queryStr: string = `INSERT INTO users 
+    (role_id, username, password, email, first_name, last_name, image, provider, provider_id) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
+    await query(queryStr, [role_id, username, password, email, first_name, last_name, image, provider, provider_id]);
+    return;
+}
+
+export const updateUserWithGoogle = async (userId: number, provider_id: string, image?: string | null) => {
+    const queryStr: string = `UPDATE users
+    SET provider_id = $1,
+        image = $2
+    WHERE id = $3;
+    `;
+    await query(queryStr, [provider_id, image, userId]);
+    return;
+}
+

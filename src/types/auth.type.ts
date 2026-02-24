@@ -38,3 +38,15 @@ export type CreateUserValues = [
     string, // last_name
     string  // phone
 ]
+
+export interface CreateUserWithGoogle {
+    role_id: number;
+    username: string;
+    password?: string | null;
+    email: string;
+    first_name: string;
+    last_name: string;
+    image?: string | null;
+    provider: string;
+    provider_id: string;
+}

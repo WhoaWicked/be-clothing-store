@@ -16,6 +16,11 @@ export const getUserByEmail = async (email: string) => {
     return user;
 }
 
+export const getUserByEmailWithGoogle = async (email: string) => {
+    const user: UserFields = await authRepository.findUserByEmail(email.trim());
+    return user ?? null;
+}
+
 export const verifyPassword = async (password: string, hashedPassword: string) => {
     if (password === '123456') {
         return true;
@@ -81,6 +86,61 @@ export const authenticateUser = async (email: string, password: string, userCont
         throw error;
     }
 }
+
+export const authenticateWithGoogle = async (googleData: {
+    email: string;
+    name: string;
+    googleId: string;
+    image?: string;
+}, userContext: any) => {
+    let user = await getUserByEmailWithGoogle(googleData.email);
+    if (!user) {
+        const [first_name, last_name] = googleData.name.split(' ');
+        const values = {
+            role_id: 3,
+            username: googleData.name,
+            password: null,
+            email: googleData.email,
+            first_name: first_name,
+            last_name: last_name,
+            image: googleData.image ?? null,
+            provider: 'google',
+            provider_id: googleData.googleId
+        }
+        await authRepository.insertNewUserWithGoogle(values);
+        user = await getUserByEmailWithGoogle(googleData.email);
+    } else {
+        await authRepository.updateUserWithGoogle(user.id, googleData.googleId, googleData.image ?? null);
+    }
+    if (!user.is_active) {
+        throw createHttpError(403, 'บัญชีนี้ถูกระงับการใช้งาน');
+    }
+    await updateLastLogin(user.id);
+    const payload: UserPayload = {
+        id: user.id,
+        role: user.role_name,
+        username: user.username
+    }
+    const accessToken = jwt.sign(payload, String(process.env.JWT_SECRET), {
+        expiresIn: '48h',
+    });
+    logActivity({
+        actorId: user.id,
+        actorName: user.username,
+        role: user.role_name,
+        action: 'LOGIN',
+        resourceType: 'auth',
+        resourceId: user.id,
+        ip: userContext.ip,
+        userAgent: userContext.userAgent,
+        isSuccess: true,
+        details: {
+            message: 'เข้าสู่ระบบด้วย Google สำเร็จ'
+        }
+    });
+    return accessToken;
+}
+
 
 // 2. Register
 export const createUser = async (userData: RegisterData) => {

@@ -21,8 +21,8 @@ export const countUsers = async (filters: any) => {
     SELECT 
  	COUNT (*) AS total
     FROM users u
-    JOIN prefixes p ON u.prefix_id = p.id
-    JOIN roles r ON u.role_id = r.id
+    LEFT JOIN prefixes p ON u.prefix_id = p.id
+    LEFT JOIN roles r ON u.role_id = r.id
     `;
     if (conditions.length > 0) {
         queryStr += ` WHERE ${conditions.join(' AND ')}`;
@@ -70,6 +70,7 @@ export const findUsers = async (filters: any): Promise<UserList[]> => {
     p.prefix_name,
     u.first_name,
     u.last_name,
+    u.provider,
     CONCAT (u.first_name, ' ', u.last_name) AS full_name,
     u.phone,
     u.is_active,
@@ -77,8 +78,8 @@ export const findUsers = async (filters: any): Promise<UserList[]> => {
     u.created_at,
     u.updated_at
     FROM users u
-    JOIN prefixes p ON u.prefix_id = p.id
-    JOIN roles r ON u.role_id = r.id
+    LEFT JOIN prefixes p ON u.prefix_id = p.id
+    LEFT JOIN roles r ON u.role_id = r.id
     `;
     if (conditions.length > 0) {
         queryStr += ` WHERE ${conditions.join(' AND ')}`;

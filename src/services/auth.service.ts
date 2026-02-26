@@ -41,6 +41,7 @@ export const authenticateUser = async (email: string, password: string, userCont
     try {
         user = await getUserByEmail(email);
         if (!user) { throw createHttpError(401, 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'); }
+        if (!user.is_active) { throw createHttpError(403, 'บัญชีนี้ถูกระงับการใช้งาน'); }
         await verifyPassword(password, user.password);
         await updateLastLogin(user.id);
         const payload: UserPayload = {
